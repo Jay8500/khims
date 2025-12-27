@@ -1,3 +1,8 @@
 [build]
   command = "npm run build"
-  publish = "dist/hms-web/browser" # Update 'hms-web' to your project name in angular.json
+  publish = "dist/hms-web/browser"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
