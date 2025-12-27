@@ -1,0 +1,27 @@
+<div class="p-10 bg-white rounded-[45px] shadow-xl border border-slate-100">
+  <form #configF="ngForm" (ngSubmit)="saveConfig(configF.value)" class="space-y-8">
+    
+    <div class="flex items-center gap-8 p-6 bg-slate-50 rounded-[30px] border-2 border-dashed border-slate-200">
+      <div class="w-24 h-24 rounded-2xl bg-white border border-slate-100 flex items-center justify-center overflow-hidden shadow-inner">
+        @if (previewLogo()) {
+          <img [src]="previewLogo()" class="w-full h-full object-contain" />
+        } @else {
+          <span class="text-3xl text-slate-300">🖼️</span>
+        }
+      </div>
+      <div class="flex-1">
+        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Hospital Logo (PNG/JPG)</label>
+        <input type="file" (change)="onFileSelected($event)" accept="image/*" class="text-xs font-bold text-slate-500" />
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-6">
+      <input type="text" name="name" [ngModel]="branding.hospitalConfig().name" placeholder="Hospital Name" class="p-4 bg-slate-50 rounded-2xl outline-none border-none font-bold" />
+      <input type="color" name="primaryColor" [ngModel]="branding.hospitalConfig().primaryColor" class="w-full h-14 rounded-2xl bg-slate-50 border-none cursor-pointer" />
+    </div>
+
+    <button type="submit" class="w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase tracking-widest text-xs hover:bg-blue-600 transition-all">
+      Save & Deploy Branding
+    </button>
+  </form>
+</div>

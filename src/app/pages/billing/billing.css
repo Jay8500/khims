@@ -1,0 +1,24 @@
+@media print {
+  /* Hide everything except the invoice container */
+  body * {
+    visibility: hidden;
+  }
+  .print\:hidden, 
+  .fixed, 
+  nav, 
+  button {
+    display: none !important;
+  }
+  /* Show the specific invoice content */
+  .max-w-4xl, .max-w-4xl * {
+    visibility: visible;
+  }
+  .max-w-4xl {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}

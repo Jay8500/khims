@@ -1,0 +1,127 @@
+<div class="p-8 bg-slate-50 min-h-screen">
+  <div class="max-w-4xl mx-auto bg-white rounded-[40px] shadow-sm overflow-hidden border border-slate-100 print:shadow-none print:border-none">
+    
+    <div class="p-8 border-b border-dashed border-slate-200">
+      <div class="flex justify-between items-start">
+        <div>
+          <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase">
+            {{ selectedPatient().type }} Bill
+          </span>
+          <h1 class="text-3xl font-black text-slate-800 mt-2">{{ selectedPatient().name }}</h1>
+          <p class="text-slate-400 font-bold text-xs uppercase">UHID: {{ selectedPatient().uhid }}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-slate-400 font-black uppercase text-[10px]">Invoice Date</p>
+          <p class="font-bold text-slate-800">{{ today | date:'mediumDate' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-8">
+      <table class="w-full text-left">
+        <thead class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+          <tr>
+            <th class="pb-4">Service Description</th>
+            <th class="pb-4 text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody class="text-sm">
+          @for (item of billItems(); track item.description) {
+            <tr class="border-b border-slate-50">
+              <td class="py-4">
+                <p class="font-bold text-slate-700">{{ item.description }}</p>
+                <p class="text-[10px] text-slate-400 font-bold uppercase">{{ item.category }} • {{ item.date }}</p>
+              </td>
+              <td class="py-4 text-right font-black text-slate-800">₹{{ item.amount }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="p-8 bg-slate-50/50 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="space-y-3">
+        <div class="p-4 bg-white rounded-2xl border border-slate-100">
+          <p class="text-[10px] font-black text-slate-400 uppercase">Advance/Paid</p>
+          <p class="text-xl font-black text-emerald-600">₹{{ advancePaid() }}</p>
+        </div>
+        @if (refundAmount() > 0) {
+          <div class="p-4 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-200">
+            <p class="text-[10px] font-black uppercase opacity-80">Refund to Patient</p>
+            <p class="text-xl font-black">₹{{ refundAmount() }}</p>
+          </div>
+        }
+      </div>
+
+      <div class="space-y-2">
+        <div class="flex justify-between text-sm font-bold text-slate-500">
+          <span>Subtotal</span>
+          <span>₹{{ subTotal() }}</span>
+        </div>
+        <div class="flex justify-between text-sm font-bold text-slate-500">
+          <span>GST (5%)</span>
+          <span>₹{{ tax() | number:'1.0-0' }}</span>
+        </div>
+        <div class="pt-4 border-t border-slate-200 flex justify-between items-center">
+          <span class="text-lg font-black text-slate-800">Grand Total</span>
+          <span class="text-2xl font-black text-slate-900">₹{{ grandTotal() }}</span>
+        </div>
+        <div class="flex justify-between items-center pt-2">
+          <span class="text-xs font-black text-red-500 uppercase">Balance Due</span>
+          <span class="text-xl font-black text-red-600">₹{{ balanceDue() }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto mt-8 flex gap-4 print:hidden">
+    <button (click)="finalizeBill()" class="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-black transition-all uppercase tracking-widest text-xs">
+      Finalize & Print
+    </button>
+    <button (click)="showPaymentSidebar.set(true)" class="flex-1 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-black hover:bg-slate-50 transition-all uppercase tracking-widest text-xs">
+      Collect Payment / Refund
+    </button>
+  </div>
+
+  @if (showPaymentSidebar()) {
+    <div class="fixed inset-0 z-[200] flex justify-end print:hidden">
+      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" (click)="showPaymentSidebar.set(false)"></div>
+      <div class="relative w-full max-w-md bg-white h-full shadow-2xl p-10 flex flex-col animate-in slide-in-from-right duration-300">
+        <h2 class="text-2xl font-black text-slate-800 mb-2">Process Transaction</h2>
+        <p class="text-sm text-slate-400 mb-8 font-medium italic">Adjust patient ledger balance</p>
+
+        <form #paymentForm="ngForm" (ngSubmit)="handlePayment(paymentForm.value)" class="space-y-6">
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase mb-3">Type</label>
+            <div class="flex bg-slate-100 p-1 rounded-xl">
+              <button type="button" (click)="payType.set('advance')" 
+                [class]="payType() === 'advance' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'" 
+                class="flex-1 py-2 rounded-lg font-bold text-xs transition-all">PAYMENT</button>
+              <button type="button" (click)="payType.set('refund')" 
+                [class]="payType() === 'refund' ? 'bg-white shadow-sm text-red-600' : 'text-slate-500'" 
+                class="flex-1 py-2 rounded-lg font-bold text-xs transition-all">REFUND</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Amount (₹)</label>
+            <input type="number" name="amount" ngModel required class="w-full px-5 py-4 rounded-2xl border border-slate-100 bg-slate-50 text-xl font-black text-slate-800 outline-none" />
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Method</label>
+            <select name="mode" ngModel="UPI" class="w-full px-5 py-4 rounded-2xl border border-slate-100 bg-slate-50 font-bold outline-none">
+              <option value="UPI">UPI / QR</option>
+              <option value="Cash">Cash</option>
+              <option value="Card">Card</option>
+            </select>
+          </div>
+
+          <button type="submit" [disabled]="!paymentForm.valid" class="w-full py-5 bg-blue-600 text-white rounded-[24px] font-black shadow-xl hover:bg-blue-700 transition-all mt-10">
+            Submit Transaction
+          </button>
+        </form>
+      </div>
+    </div>
+  }
+</div>

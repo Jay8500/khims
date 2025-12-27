@@ -1,0 +1,38 @@
+<div class="p-8 bg-slate-50 min-h-screen">
+  <h1 class="text-3xl font-black text-slate-800 mb-8 tracking-tight">Hospital Analytics & Reports</h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <div class="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100">
+      <p class="text-[10px] font-black text-slate-400 uppercase mb-4">Bed Occupancy</p>
+      <div class="relative w-24 h-24 mx-auto mb-4">
+         <div class="flex items-center justify-center w-full h-full rounded-full border-8 border-blue-500 border-t-slate-100">
+            <span class="text-xl font-black">{{ occupancyRate() }}%</span>
+         </div>
+      </div>
+      <p class="text-center text-xs text-slate-500 font-bold">Total Beds Full</p>
+    </div>
+
+    <div class="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100">
+      <p class="text-[10px] font-black text-slate-400 uppercase mb-4">Daily IP Revenue</p>
+      <h2 class="text-4xl font-black text-emerald-600 mb-2">₹{{ dailyBedRevenue() | number }}</h2>
+      <p class="text-xs text-slate-400 font-medium">Estimated from current bed occupancy</p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-[40px] p-8 shadow-sm border border-slate-100">
+    <h3 class="font-bold text-slate-800 mb-6">Ward Distribution</h3>
+    <div class="space-y-6">
+      @for (ward of wards(); track ward.name) {
+        <div>
+          <div class="flex justify-between mb-2">
+            <span class="font-bold text-slate-700">{{ ward.name }}</span>
+            <span class="text-xs font-black text-slate-400">{{ ward.occupied }} / {{ ward.totalBeds }} Beds</span>
+          </div>
+          <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+            <div [style.width.%]="(ward.occupied / ward.totalBeds) * 100" class="h-full bg-blue-500 rounded-full transition-all duration-1000"></div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

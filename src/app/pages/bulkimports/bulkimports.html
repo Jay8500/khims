@@ -1,0 +1,74 @@
+<div class="p-10 bg-slate-50 min-h-screen flex flex-col items-center">
+  <div class="max-w-5xl w-full">
+    
+    <div class="mb-12 flex justify-between items-end">
+      <div>
+        <h1 class="text-4xl font-black text-slate-900 italic tracking-tighter">Bulk Data Master</h1>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mt-2">SaaS Bulk Onboarding Engine</p>
+      </div>
+      <button (click)="downloadTemplate()" class="text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors underline decoration-2 underline-offset-4">
+        Download .CSV Template
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      
+      <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white p-6 rounded-[35px] shadow-sm border border-slate-100">
+          <label class="block text-[10px] font-black text-slate-400 uppercase mb-4 tracking-widest">Target Entity</label>
+          <div class="space-y-2">
+            @for (type of ['Doctors', 'Staff', 'Inventory']; track type) {
+              <button (click)="importType.set(type)" 
+                [class.bg-slate-900]="importType() === type"
+                [class.text-white]="importType() === type"
+                class="w-full text-left px-5 py-3 rounded-2xl text-xs font-bold transition-all border border-transparent">
+                {{ type }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-3">
+        <div class="bg-white rounded-[50px] p-4 shadow-xl border border-slate-50 h-[450px]">
+          <div (click)="fileInput.click()" 
+               class="h-full border-4 border-dashed border-slate-50 rounded-[40px] flex flex-col items-center justify-center p-12 hover:bg-slate-50/50 transition-all cursor-pointer group relative overflow-hidden">
+            
+            <input type="file" #fileInput (change)="onFileChange($event)" class="hidden" accept=".csv">
+
+            @if (status() === 'idle') {
+              <div class="text-center animate-in fade-in zoom-in duration-500">
+                <div class="text-7xl mb-6 group-hover:scale-110 transition-transform duration-500">📥</div>
+                <h2 class="text-2xl font-black text-slate-800 italic">Ready for Import</h2>
+                <p class="text-slate-400 font-bold text-xs uppercase mt-2">Click to select the {{ importType() }} file</p>
+              </div>
+            }
+
+            @if (status() === 'loading') {
+              <div class="text-center">
+                <div class="w-20 h-20 border-8 border-slate-100 border-t-8 rounded-full animate-spin mb-6 mx-auto"
+                     [style.border-top-color]="branding.hospitalConfig().primaryColor"></div>
+                <p class="text-xl font-black text-slate-900 italic">Hydrating Database...</p>
+                <div class="w-48 h-1.5 bg-slate-100 rounded-full mx-auto mt-4 overflow-hidden">
+                   <div class="h-full bg-slate-900 animate-progress" [style.background-color]="branding.hospitalConfig().primaryColor"></div>
+                </div>
+              </div>
+            }
+
+            @if (status() === 'success') {
+              <div class="text-center animate-in zoom-in duration-500">
+                <div class="text-7xl mb-6">✅</div>
+                <h2 class="text-2xl font-black text-emerald-500 italic">Success!</h2>
+                <p class="text-slate-800 font-bold text-sm mt-2">{{ count() }} records injected into {{ importType() }}</p>
+                <button (click)="$event.stopPropagation(); status.set('idle')" 
+                        class="mt-8 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform">
+                  Upload New Batch
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

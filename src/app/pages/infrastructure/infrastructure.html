@@ -1,0 +1,86 @@
+<div class="p-8 bg-slate-50 min-h-screen">
+  
+  <div class="flex justify-between items-center mb-10 bg-white p-8 rounded-[40px] shadow-sm border border-slate-100">
+    <div>
+      <h1 class="text-3xl font-black text-slate-900 italic tracking-tight">Hospital Assets</h1>
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Manage Floors, Rooms & Beds</p>
+    </div>
+    <button (click)="showAddBedSidebar.set(true)" 
+            class="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black shadow-2xl hover:bg-blue-600 transition-all active:scale-95">
+      + Add New Asset
+    </button>
+  </div>
+
+  <div class="space-y-8">
+    @for (room of hospitalMap(); track room.roomNo) {
+      <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-black text-slate-800">Room {{ room.roomNo }} <span class="text-xs text-blue-500 ml-2 italic">({{ room.floor }})</span></h3>
+          <button (click)="removeRoom(room.roomNo)" class="text-red-400 hover:text-red-600 text-xs font-black uppercase">Remove Room</button>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          @for (bed of room.beds; track bed.id) {
+            <div class="p-4 rounded-3xl bg-slate-50 border border-slate-100 relative group">
+              <button (click)="removeBed(room.roomNo, bed.id)" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100">×</button>
+              <div class="text-2xl mb-2">🛏️</div>
+              <p class="font-black text-slate-800">{{ bed.bedNo }}</p>
+              <p class="text-[9px] font-black text-slate-400 uppercase">{{ bed.type }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (showAddBedSidebar()) {
+    <div class="fixed inset-0 z-[200] flex justify-end">
+      <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md" (click)="showAddBedSidebar.set(false)"></div>
+      
+      <div class="relative w-full max-w-md bg-white h-full shadow-2xl p-10 flex flex-col animate-in slide-in-from-right duration-300">
+        <h2 class="text-3xl font-black text-slate-800 italic mb-2">New Asset</h2>
+        <p class="text-sm text-slate-400 mb-10 font-medium">Map a new bed to the hospital infrastructure.</p>
+
+        <form #assetForm="ngForm" (ngSubmit)="addBed(assetForm.value)" class="space-y-6">
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Floor Allocation</label>
+            <select name="floor" ngModel="1st Floor" class="w-full px-5 py-4 rounded-2xl border border-slate-100 bg-slate-50 font-bold outline-none">
+              <option value="1st Floor">1st Floor</option>
+              <option value="2nd Floor">2nd Floor</option>
+              <option value="3rd Floor">3rd Floor</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Room Number</label>
+            <input type="text" name="roomNo" ngModel required placeholder="e.g. 101" class="w-full px-5 py-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Bed Name</label>
+              <input type="text" name="bedNo" ngModel required placeholder="e.g. B-1" class="w-full px-5 py-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Type</label>
+              <select name="type" ngModel="General" class="w-full px-5 py-4 rounded-2xl border border-slate-100 bg-slate-50 font-bold outline-none">
+                <option value="General">General</option>
+                <option value="ICU">ICU</option>
+                <option value="Private">Private</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Daily Rate (₹)</label>
+            <input type="number" name="price" ngModel required class="w-full px-5 py-4 rounded-2xl border border-slate-100 bg-slate-50 text-xl font-black text-blue-600 outline-none" />
+          </div>
+
+          <button type="submit" [disabled]="!assetForm.valid" class="w-full py-5 bg-slate-900 text-white rounded-[24px] font-black shadow-2xl hover:bg-blue-600 transition-all mt-10 uppercase tracking-widest text-xs">
+            Register Asset
+          </button>
+        </form>
+      </div>
+    </div>
+  }
+</div>
