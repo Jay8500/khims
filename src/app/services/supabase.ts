@@ -11,10 +11,17 @@ export class Supabase {
   // 1. New Signal for Duplicate Session Detection
   public isDuplicateTab = signal(false);
   private sessionChannel = new BroadcastChannel('hms_session_guard');
+  public currentUser = signal<any>(null); // Added this
+
   constructor() {
     // Use dot notation (no brackets, no quotes)
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
+    // Initial check on load
+    this.supabase.auth.getSession().then(({ data }) => {
+      this.currentUser.set(data.session?.user ?? null);
+    });
     this.supabase.auth.onAuthStateChange((event, session) => {
+      this.currentUser.set(session?.user ?? null); // Keep signal in sync
       if (event === 'SIGNED_OUT') {
         // If the user is logged out, force them to the login page
         this.router.navigate(['/login']);
@@ -23,7 +30,9 @@ export class Supabase {
     this.initSessionGuard();
   }
   private tabId = Math.random().toString(36).substring(7);
-
+  get hasActiveSession(): boolean {
+    return !!this.currentUser();
+  }
   private async initSessionGuard() {
     this.sessionChannel.onmessage = async (event) => {
       // 1. Get the current session

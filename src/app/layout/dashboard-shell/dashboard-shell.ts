@@ -11,9 +11,12 @@ import { Supabase } from '../../services/supabase';
 import { CommonModule } from '@angular/common';
 import { Sidebar } from '../../shared/sidebar/sidebar';
 import { Header } from '../../shared/header/header';
+import { Pagecontainer } from '../../shared/pagecontainer/pagecontainer';
+import { Sessionguard } from '../../shared/sessionguard/sessionguard';
+// import { Toasters } from '../../shared/toasters/toasters';
 @Component({
   selector: 'app-dashboard-shell',
-  imports: [CommonModule, Sidebar, Header, RouterOutlet],
+  imports: [CommonModule, Sidebar, Header, RouterOutlet, Pagecontainer, Sessionguard],
   standalone: true,
   templateUrl: './dashboard-shell.html',
   styleUrl: './dashboard-shell.css',

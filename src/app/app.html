@@ -1,1 +1,29 @@
+<!-- @if (loadingService.isLoading()) {
+<div class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-50/80 backdrop-blur-2xl animate-in fade-in duration-500">
+  
+  <div class="glass-bubble w-96 h-96 -top-10 -right-10 animate-float opacity-20" 
+       [style.background-color]="branding.hospitalConfig().primaryColor"></div>
+
+  <div class="relative flex flex-col items-center">
+    <div class="w-24 h-24 bg-white rounded-[32px] shadow-2xl flex items-center justify-center p-4 animate-bounce mb-6 border border-white">
+        <img [src]="branding.hospitalConfig().logo" class="max-h-full max-w-full object-contain" />
+    </div>
+
+    <h2 class="text-sm font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">
+      Initializing Dashboard...
+    </h2>
+    
+    <div class="w-48 h-1 bg-slate-200 rounded-full mt-4 overflow-hidden">
+        <div class="h-full bg-blue-500 animate-[loading_2s_ease-in-out_infinite]" 
+             [style.background-color]="branding.hospitalConfig().primaryColor"></div>
+    </div>
+  </div>
+</div>
+} -->
+
 <router-outlet />
+<app-toasters></app-toasters>
+
+@if (showTheJay()) {
+<app-the-jay></app-the-jay>
+}

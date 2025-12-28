@@ -1,13 +1,16 @@
-<header class="h-16 bg-white flex items-center justify-between px-4 border-b border-slate-200">
+<header
+  class="h-16 bg-white dark:bg-slate-900 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800 transition-colors"
+>
   <div class="flex items-center gap-4 w-64">
     <button
       (click)="onMenuClick()"
-      class="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
+      class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300 transition-colors"
     >
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path d="M4 6h16M4 12h16M4 18h16" stroke-width="2" stroke-linecap="round" />
       </svg>
     </button>
+
     <div class="flex items-center gap-3">
       @if (branding.hospitalConfig().logo) {
       <img [src]="branding.hospitalConfig().logo" class="h-10 w-auto object-contain" />
@@ -32,26 +35,29 @@
   <div class="relative flex items-center gap-3 ml-4">
     <button
       (click)="toggleProfile()"
-      class="flex items-center gap-3 hover:bg-slate-50 p-1 rounded-full transition-all border border-transparent hover:border-slate-200"
+      class="flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 p-1 rounded-full transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
     >
       <div class="hidden md:block text-right mr-1">
-        <p class="text-xs font-bold text-slate-800 uppercase leading-none">Admin</p>
-        <p class="text-[10px] text-slate-400">{{ userEmail() }}</p>
+        <p class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase leading-none">
+          Admin
+        </p>
+        <p class="text-[10px] text-slate-400 dark:text-slate-500">{{ userEmail() }}</p>
       </div>
       <div
         class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold shadow-inner"
       >
-        <!-- {{ userEmail?.charAt(0) || 'A' | uppercase }} -->
         {{ userInitial() | uppercase }}
       </div>
     </button>
 
     <div
       *ngIf="isProfileOpen()"
-      class="absolute top-14 right-0 w-80 bg-white border border-slate-200 shadow-2xl rounded-[30px] py-4 z-50 animate-fadeIn overflow-hidden"
+      class="absolute top-14 right-0 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-[30px] py-4 z-50 animate-fadeIn overflow-hidden"
     >
-      <div class="px-6 py-4 border-b border-slate-50 text-center">
-        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
+      <div class="px-6 py-4 border-b border-slate-50 dark:border-slate-800 text-center">
+        <p
+          class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-2"
+        >
           Staff Profile
         </p>
         <div
@@ -59,16 +65,20 @@
         >
           {{ userInitial() || 'A' | uppercase }}
         </div>
-        <p class="font-black text-slate-800 italic">{{ userEmail() }}</p>
-        <p class="text-[10px] text-blue-600 font-bold uppercase tracking-widest mt-1">
+        <p class="font-black text-slate-800 dark:text-white italic">{{ userEmail() }}</p>
+        <p
+          class="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest mt-1"
+        >
           Admin Access
         </p>
       </div>
 
-      <div class="p-5 bg-slate-50/50">
+      <div class="p-5 bg-slate-50/50 dark:bg-slate-800/50">
         <div class="flex items-center gap-2 mb-3">
           <div class="w-1 h-3 rounded-full bg-red-500"></div>
-          <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+          <p
+            class="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest"
+          >
             Upcoming Closures
           </p>
         </div>
@@ -76,12 +86,14 @@
         <div class="space-y-2">
           @for (h of holidays().slice(0, 2); track h.date) {
           <div
-            class="bg-white p-3 rounded-2xl border border-slate-100 flex items-center gap-3 shadow-sm"
+            class="bg-white dark:bg-slate-800 p-3 rounded-2xl border border-slate-100 dark:border-slate-700 flex items-center gap-3 shadow-sm"
           >
             <span class="text-xl">{{ h.icon }}</span>
             <div>
-              <p class="text-[10px] font-black text-slate-900 leading-tight">{{ h.reason }}</p>
-              <p class="text-[8px] font-bold text-slate-400 uppercase">
+              <p class="text-[10px] font-black text-slate-900 dark:text-slate-100 leading-tight">
+                {{ h.reason }}
+              </p>
+              <p class="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase">
                 {{ h.date | date : 'dd MMM' }}
               </p>
             </div>
@@ -90,10 +102,65 @@
         </div>
       </div>
 
+      <div class="px-6 py-4 border-b border-slate-50 dark:border-slate-800">
+        <p
+          class="text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3"
+        >
+          Appearance
+        </p>
+        <div
+          class="grid grid-cols-3 gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800"
+        >
+          <button
+            (click)="setTheme('light')"
+            [class.ring-2]="currentTheme === 'light'"
+            class="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[10px] font-black uppercase tracking-tighter ring-blue-500 text-slate-700 dark:text-slate-300 transition-all hover:bg-white dark:hover:bg-slate-700"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="5" stroke-width="2.5" />
+              <path
+                d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42m12.72-12.72l1.42-1.42"
+                stroke-width="2.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            Light
+          </button>
+
+          <button
+            (click)="setTheme('dark')"
+            [class.ring-2]="currentTheme === 'dark'"
+            class="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[10px] font-black uppercase tracking-tighter ring-blue-500 text-slate-700 dark:text-slate-300 transition-all hover:bg-white dark:hover:bg-slate-700"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Dark
+          </button>
+
+          <button
+            (click)="setTheme('system')"
+            [class.ring-2]="currentTheme === 'system'"
+            class="flex flex-col items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[10px] font-black uppercase tracking-tighter ring-blue-500 text-slate-700 dark:text-slate-300 transition-all hover:bg-white dark:hover:bg-slate-700"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="2" y="3" width="20" height="14" rx="3" stroke-width="2.5" />
+              <path d="M8 21h8m-4-4v4" stroke-width="2.5" stroke-linecap="round" />
+            </svg>
+            System
+          </button>
+        </div>
+      </div>
+
       <div class="px-2 pt-2">
         <button
           (click)="personalInfo()"
-          class="w-full text-left px-6 py-3 text-xs font-bold text-slate-600 hover:bg-slate-50 rounded-xl flex items-center gap-3 transition-colors"
+          class="w-full text-left px-6 py-3 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl flex items-center gap-3 transition-colors"
         >
           <svg class="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -106,7 +173,7 @@
 
         <button
           (click)="handleLogout()"
-          class="w-full text-left px-6 py-3 text-xs font-black text-red-500 hover:bg-red-50 rounded-xl flex items-center gap-3 transition-colors mt-1"
+          class="w-full text-left px-6 py-3 text-xs font-black text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl flex items-center gap-3 transition-colors mt-1"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path d="M17 16l4-4m0 0l-4-4m4 4H7" stroke-width="2" />

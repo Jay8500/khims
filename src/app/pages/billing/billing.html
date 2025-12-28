@@ -1,127 +1,222 @@
-<div class="p-8 bg-slate-50 min-h-screen">
-  <div class="max-w-4xl mx-auto bg-white rounded-[40px] shadow-sm overflow-hidden border border-slate-100 print:shadow-none print:border-none">
-    
-    <div class="p-8 border-b border-dashed border-slate-200">
-      <div class="flex justify-between items-start">
-        <div>
-          <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-black uppercase">
-            {{ selectedPatient().type }} Bill
-          </span>
-          <h1 class="text-3xl font-black text-slate-800 mt-2">{{ selectedPatient().name }}</h1>
-          <p class="text-slate-400 font-bold text-xs uppercase">UHID: {{ selectedPatient().uhid }}</p>
+<div class="p-8 space-y-8 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors">
+  <div
+    class="flex flex-wrap justify-between items-center bg-white dark:bg-slate-900 p-8 rounded-[40px] border border-slate-100 dark:border-slate-800 shadow-sm print:hidden"
+  >
+    <div>
+      <h1 class="text-3xl font-black text-slate-800 dark:text-white tracking-tighter italic">
+        Billing Dashboard
+      </h1>
+      <p class="text-sm text-slate-500 font-medium">Manage patient ledger accounts</p>
+    </div>
+    <button
+      (click)="showNewInvoiceSidebar.set(true)"
+      class="bg-blue-600 text-white px-8 py-4 rounded-[24px] font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200"
+    >
+      + New Invoice
+    </button>
+  </div>
+
+  <div class="max-w-2xl print:hidden">
+    <input
+      type="text"
+      (input)="searchTerm.set($any($event.target).value)"
+      placeholder="Search Name or UHID..."
+      class="w-full px-8 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[24px] outline-none font-bold dark:text-white transition-all focus:ring-4 focus:ring-blue-500/10"
+    />
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 print:hidden">
+    @for (bill of filteredBills(); track bill.id) { @let totals = calculateTotals(bill);
+    <div
+      class="bg-white dark:bg-slate-900 rounded-[40px] border border-slate-100 dark:border-slate-800 p-8 shadow-sm hover:shadow-xl transition-all relative overflow-hidden group"
+    >
+      <div class="flex justify-between items-start mb-6">
+        <div
+          class="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-2xl flex items-center justify-center font-black"
+        >
+          {{ bill.type }}
         </div>
-        <div class="text-right">
-          <p class="text-slate-400 font-black uppercase text-[10px]">Invoice Date</p>
-          <p class="font-bold text-slate-800">{{ today | date:'mediumDate' }}</p>
+        <button
+          (click)="archiveBill(bill.id)"
+          class="text-slate-300 hover:text-red-500 transition-colors"
+        >
+          🗑️
+        </button>
+      </div>
+
+      <h3 class="text-xl font-black text-slate-800 dark:text-white">{{ bill.name }}</h3>
+      <p class="text-[10px] text-slate-400 font-black tracking-widest mb-6">{{ bill.uhid }}</p>
+
+      <div class="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-6 mb-6">
+        <div class="flex justify-between mb-2">
+          <span class="text-[10px] font-black text-slate-400 uppercase">Total</span
+          ><span class="font-black dark:text-white">₹{{ totals.grandTotal }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-[10px] font-black text-slate-400 uppercase">Due</span
+          ><span class="text-2xl font-black text-red-600">₹{{ totals.balanceDue }}</span>
         </div>
       </div>
-    </div>
 
-    <div class="p-8">
-      <table class="w-full text-left">
-        <thead class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-          <tr>
-            <th class="pb-4">Service Description</th>
-            <th class="pb-4 text-right">Amount</th>
-          </tr>
-        </thead>
-        <tbody class="text-sm">
-          @for (item of billItems(); track item.description) {
-            <tr class="border-b border-slate-50">
-              <td class="py-4">
-                <p class="font-bold text-slate-700">{{ item.description }}</p>
-                <p class="text-[10px] text-slate-400 font-bold uppercase">{{ item.category }} • {{ item.date }}</p>
-              </td>
-              <td class="py-4 text-right font-black text-slate-800">₹{{ item.amount }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+      <div class="grid grid-cols-2 gap-3">
+        <button
+          (click)="selectedBill.set(bill)"
+          class="py-3 bg-slate-900 dark:bg-slate-800 text-white rounded-2xl text-[10px] font-black uppercase"
+        >
+          Invoice
+        </button>
+        <button
+          (click)="selectedBill.set(bill); showPaymentSidebar.set(true); payType.set('advance')"
+          class="py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-blue-100"
+        >
+          Pay
+        </button>
+      </div>
 
-    <div class="p-8 bg-slate-50/50 grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div class="space-y-3">
-        <div class="p-4 bg-white rounded-2xl border border-slate-100">
-          <p class="text-[10px] font-black text-slate-400 uppercase">Advance/Paid</p>
-          <p class="text-xl font-black text-emerald-600">₹{{ advancePaid() }}</p>
-        </div>
-        @if (refundAmount() > 0) {
-          <div class="p-4 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-200">
-            <p class="text-[10px] font-black uppercase opacity-80">Refund to Patient</p>
-            <p class="text-xl font-black">₹{{ refundAmount() }}</p>
+      <div class="absolute bottom-0 left-0 w-full h-1.5 bg-slate-100 dark:bg-slate-800">
+        <div
+          class="h-full bg-emerald-500 transition-all duration-700"
+          [style.width.%]="(bill.advancePaid / totals.grandTotal) * 100"
+        ></div>
+      </div>
+    </div>
+    }
+  </div>
+
+  @if (selectedBill(); as active) { @let info = calculateTotals(active);
+  <div class="fixed inset-0 z-[250] flex items-center justify-center p-6">
+    <div
+      class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+      (click)="selectedBill.set(null)"
+    ></div>
+    <div
+      class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in duration-200"
+    >
+      <div
+        class="p-8 border-b border-dashed border-slate-200 dark:border-slate-800 flex justify-between"
+      >
+        <h2 class="text-2xl font-black italic dark:text-white">{{ active.name }}</h2>
+        <button (click)="selectedBill.set(null)">✕</button>
+      </div>
+      <div class="p-8 max-h-[400px] overflow-y-auto">
+        @for (item of active.items; track item.description) {
+        <div class="flex justify-between py-4 border-b border-slate-50 dark:border-slate-800">
+          <div>
+            <p class="font-bold dark:text-slate-200">{{ item.description }}</p>
+            <p class="text-[10px] text-slate-400">{{ item.category }}</p>
           </div>
+          <p class="font-black dark:text-white">₹{{ item.amount }}</p>
+        </div>
         }
       </div>
-
-      <div class="space-y-2">
-        <div class="flex justify-between text-sm font-bold text-slate-500">
-          <span>Subtotal</span>
-          <span>₹{{ subTotal() }}</span>
-        </div>
-        <div class="flex justify-between text-sm font-bold text-slate-500">
-          <span>GST (5%)</span>
-          <span>₹{{ tax() | number:'1.0-0' }}</span>
-        </div>
-        <div class="pt-4 border-t border-slate-200 flex justify-between items-center">
-          <span class="text-lg font-black text-slate-800">Grand Total</span>
-          <span class="text-2xl font-black text-slate-900">₹{{ grandTotal() }}</span>
-        </div>
-        <div class="flex justify-between items-center pt-2">
-          <span class="text-xs font-black text-red-500 uppercase">Balance Due</span>
-          <span class="text-xl font-black text-red-600">₹{{ balanceDue() }}</span>
-        </div>
+      <div class="p-8 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center">
+        <span class="text-xl font-black text-red-600">Due: ₹{{ info.balanceDue }}</span>
+        <button
+          (click)="finalizeBill(active)"
+          class="bg-slate-900 text-white px-8 py-3 rounded-xl font-black text-xs uppercase"
+        >
+          Print Bill
+        </button>
       </div>
     </div>
   </div>
-
-  <div class="max-w-4xl mx-auto mt-8 flex gap-4 print:hidden">
-    <button (click)="finalizeBill()" class="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-black transition-all uppercase tracking-widest text-xs">
-      Finalize & Print
-    </button>
-    <button (click)="showPaymentSidebar.set(true)" class="flex-1 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-black hover:bg-slate-50 transition-all uppercase tracking-widest text-xs">
-      Collect Payment / Refund
-    </button>
-  </div>
-
-  @if (showPaymentSidebar()) {
-    <div class="fixed inset-0 z-[200] flex justify-end print:hidden">
-      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" (click)="showPaymentSidebar.set(false)"></div>
-      <div class="relative w-full max-w-md bg-white h-full shadow-2xl p-10 flex flex-col animate-in slide-in-from-right duration-300">
-        <h2 class="text-2xl font-black text-slate-800 mb-2">Process Transaction</h2>
-        <p class="text-sm text-slate-400 mb-8 font-medium italic">Adjust patient ledger balance</p>
-
-        <form #paymentForm="ngForm" (ngSubmit)="handlePayment(paymentForm.value)" class="space-y-6">
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase mb-3">Type</label>
-            <div class="flex bg-slate-100 p-1 rounded-xl">
-              <button type="button" (click)="payType.set('advance')" 
-                [class]="payType() === 'advance' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'" 
-                class="flex-1 py-2 rounded-lg font-bold text-xs transition-all">PAYMENT</button>
-              <button type="button" (click)="payType.set('refund')" 
-                [class]="payType() === 'refund' ? 'bg-white shadow-sm text-red-600' : 'text-slate-500'" 
-                class="flex-1 py-2 rounded-lg font-bold text-xs transition-all">REFUND</button>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Amount (₹)</label>
-            <input type="number" name="amount" ngModel required class="w-full px-5 py-4 rounded-2xl border border-slate-100 bg-slate-50 text-xl font-black text-slate-800 outline-none" />
-          </div>
-
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Method</label>
-            <select name="mode" ngModel="UPI" class="w-full px-5 py-4 rounded-2xl border border-slate-100 bg-slate-50 font-bold outline-none">
-              <option value="UPI">UPI / QR</option>
-              <option value="Cash">Cash</option>
-              <option value="Card">Card</option>
-            </select>
-          </div>
-
-          <button type="submit" [disabled]="!paymentForm.valid" class="w-full py-5 bg-blue-600 text-white rounded-[24px] font-black shadow-xl hover:bg-blue-700 transition-all mt-10">
-            Submit Transaction
+  } @if (showPaymentSidebar()) {
+  <div class="fixed inset-0 z-[300] flex justify-end">
+    <div
+      class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+      (click)="showPaymentSidebar.set(false)"
+    ></div>
+    <div
+      class="relative w-full max-w-md bg-white dark:bg-slate-900 h-full p-10 shadow-2xl animate-in slide-in-from-right"
+    >
+      <h2 class="text-2xl font-black mb-10 dark:text-white">Process Transaction</h2>
+      <form #pForm="ngForm" (ngSubmit)="handlePayment(pForm.value)" class="space-y-6">
+        <div class="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl">
+          <button
+            type="button"
+            (click)="payType.set('advance')"
+            [class]="payType() === 'advance' ? 'bg-white text-blue-600' : 'text-slate-500'"
+            class="flex-1 py-3 rounded-xl font-black text-[10px] uppercase"
+          >
+            Payment
           </button>
-        </form>
-      </div>
+          <button
+            type="button"
+            (click)="payType.set('refund')"
+            [class]="payType() === 'refund' ? 'bg-white text-red-600' : 'text-slate-500'"
+            class="flex-1 py-3 rounded-xl font-black text-[10px] uppercase"
+          >
+            Refund
+          </button>
+        </div>
+        <input
+          type="number"
+          name="amount"
+          ngModel
+          required
+          class="w-full p-6 rounded-2xl bg-slate-50 dark:bg-slate-800 text-3xl font-black dark:text-white outline-none"
+          placeholder="0.00"
+        />
+        <button
+          type="submit"
+          [disabled]="!pForm.valid"
+          class="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs"
+        >
+          Confirm Transaction
+        </button>
+      </form>
     </div>
+  </div>
+  } @if (showNewInvoiceSidebar()) {
+  <div class="fixed inset-0 z-[400] flex justify-end">
+    <div
+      class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+      (click)="showNewInvoiceSidebar.set(false)"
+    ></div>
+    <div
+      class="relative w-full max-w-md bg-white dark:bg-slate-900 h-full p-10 shadow-2xl animate-in slide-in-from-right"
+    >
+      <h2 class="text-2xl font-black mb-10 dark:text-white italic">Open New Bill</h2>
+      <form #newForm="ngForm" (ngSubmit)="handleCreateInvoice(newForm.value)" class="space-y-6">
+        <div>
+          <label class="text-[10px] font-black text-slate-400 uppercase">Patient Name</label>
+          <input
+            type="text"
+            name="name"
+            ngModel
+            required
+            class="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 dark:text-white outline-none"
+          />
+        </div>
+        <div>
+          <label class="text-[10px] font-black text-slate-400 uppercase">Type</label>
+          <select
+            name="type"
+            ngModel="OP"
+            class="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 dark:text-white outline-none"
+          >
+            <option value="OP">Outpatient (OP)</option>
+            <option value="IP">Inpatient (IP)</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[10px] font-black text-slate-400 uppercase">Opening Advance</label>
+          <input
+            type="number"
+            name="advance"
+            ngModel
+            class="w-full p-4 rounded-xl bg-slate-50 dark:bg-slate-800 dark:text-white outline-none"
+          />
+        </div>
+        <button
+          type="submit"
+          [disabled]="!newForm.valid"
+          class="w-full py-5 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl font-black uppercase text-xs"
+        >
+          Generate Ledger
+        </button>
+      </form>
+    </div>
+  </div>
   }
 </div>

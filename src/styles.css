@@ -1,2 +1,75 @@
-/* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
+@theme {
+  /* Add the Shake Animation here */
+  --keyframes-shake: {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  };
+  --animate-shake: shake 0.2s ease-in-out 0s 2;
+
+  /* 2. New Smooth Floating Animations for Login Bubbles */
+  --keyframes-float: {
+    0% { transform: translateY(0px) translateX(0px); }
+    33% { transform: translateY(-20px) translateX(10px); }
+    66% { transform: translateY(10px) translateX(-10px); }
+    100% { transform: translateY(0px) translateX(0px); }
+  };
+  --animate-float: float 8s ease-in-out infinite;
+  --animate-float-slow: float 12s ease-in-out infinite;
+  --animate-float-reverse: float 10s ease-in-out infinite reverse;
+
+  --keyframes-loading: {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0%); }
+    100% { transform: translateX(100%); }
+  };
+}
+@custom-variant dark (&:is(.dark *));
+
+/* This ensures the base layer of the app follows the theme */
+@layer base {
+  body {
+    @apply bg-white text-slate-900 transition-colors duration-300;
+  }
+  .dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+}
+
+/* Global Validator Style */
+.hims-input-error {
+  /* The '!' at the start handles the importance automatically in v4 */
+  @apply !border-red-500 !ring-4 !ring-red-500/30 !bg-white/90 !animate-shake;
+  
+  /* This ensures the text inside also looks like an error state */
+  @apply !text-red-900 !placeholder-red-300;
+}
+
+/* Global Dark Mode Text Fix */
+.dark .main-content-title {
+  color: #f8fafc; /* slate-50 */
+}
+
+.dark label {
+  color: #94a3b8; /* slate-400 */
+}
+
+.dark input {
+  background-color: #1e293b; /* slate-800 */
+  color: white;
+  border-color: #334155; /* slate-700 */
+}
+
+/* Update this in your styles.css */
+.glass-bubble {
+  @apply absolute rounded-full blur-[100px] pointer-events-none;
+  /* Add a base z-index to ensure they stay behind the card */
+  z-index: 1;
+}
+
+.hims-glass-card {
+  /* This ensures the card sits above the bubbles */
+  z-index: 10;
+  @apply backdrop-blur-2xl bg-white/60 border border-white/50 shadow-2xl;
+}

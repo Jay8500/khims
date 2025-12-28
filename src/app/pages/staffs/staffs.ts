@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Supabase } from '../../services/supabase';
 import { FormsModule } from '@angular/forms';
+import { Toaster } from '../../services/toaster';
 @Component({
   selector: 'app-staffs',
   imports: [CommonModule, FormsModule],
@@ -73,8 +74,9 @@ export class Staffs implements OnInit {
       this.isLoading.set(false); // 3. Hide Loader (even if it fails)
     }
   }
-
+  constructor(private toaster: Toaster) {}
   saveStaff(formData: any) {
+    this.toaster.show('Payment Processed Successfully!', 'success');
     console.log('Form Captured:', formData);
     // We will add Supabase integration here later
     this.showForm.set(false);
