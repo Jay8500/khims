@@ -60,17 +60,17 @@
         <p
           class="text-blue-600 dark:text-blue-400 text-xs font-semibold uppercase tracking-wider mb-4"
         >
-          {{ staff.role }}
+          {{ staff.role_name }}
         </p>
 
         <div class="space-y-2 border-t border-slate-50 dark:border-slate-800 pt-4">
           <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span class="font-medium text-slate-400 dark:text-slate-500">Dept:</span>
-            {{ staff.department }}
+            {{ staff.department_name }}
           </div>
           <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <span class="font-medium text-slate-400 dark:text-slate-500">Email:</span>
-            {{ staff.email }}
+            {{ staff.official_email }}
           </div>
         </div>
       </div>
@@ -90,109 +90,60 @@
 
 @if (showForm()) {
 <div class="fixed inset-0 z-[100] flex justify-end">
-  <div
-    class="absolute inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"
-    (click)="showForm.set(false)"
-  ></div>
+  <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" (click)="showForm.set(false)"></div>
 
-  <div
-    class="relative w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 border-l border-slate-100 dark:border-slate-800"
-  >
-    <div
-      class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50"
-    >
+  <div class="relative w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
       <div>
         <h2 class="text-xl font-bold text-slate-800 dark:text-white">Staff Registration</h2>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">
-          Master Setup
-        </p>
+        <p class="text-[11px] text-slate-400 uppercase tracking-wider mt-1">New Hospital Personnel</p>
       </div>
-      <button
-        (click)="showForm.set(false)"
-        class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-all"
-      >
-        <span class="text-xl">✕</span>
-      </button>
+      <button (click)="showForm.set(false)" class="text-slate-400 hover:text-slate-600">✕</button>
     </div>
 
     <form #f="ngForm" (ngSubmit)="saveStaff(f.value)" class="flex-1 overflow-y-auto p-8 space-y-6">
+      
       <div>
-        <label
-          class="block text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2"
-          >Full Name</label
-        >
-        <input
-          type="text"
-          name="full_name"
-          ngModel
-          required
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none transition-all"
-          placeholder="Enter full name"
-        />
+        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-2">Full Name</label>
+        <input type="text" name="full_name" ngModel required 
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:bg-slate-800 dark:text-white outline-none" 
+          placeholder="e.g. Dr. John Doe" />
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label
-            class="block text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2"
-            >Role</label
-          >
-          <select
-            name="role"
-            ngModel="Doctor"
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white outline-none focus:border-blue-500"
-          >
-            <option value="Doctor">Doctor</option>
-            <option value="Nurse">Nurse</option>
-            <option value="Admin">Admin</option>
+          <label class="block text-[11px] font-bold text-slate-400 uppercase mb-2">Role</label>
+          <select name="role_id" ngModel required class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:bg-slate-800">
+            <option value="">Select Role</option>
+            @for (role of roles(); track role.id) {
+              <option [value]="role.id">{{ role.role_name }}</option>
+            }
           </select>
         </div>
         <div>
-          <label
-            class="block text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2"
-            >Department</label
-          >
-          <input
-            type="text"
-            name="department"
-            ngModel
-            required
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none"
-            placeholder="e.g., Cardiology"
-          />
+          <label class="block text-[11px] font-bold text-slate-400 uppercase mb-2">Department</label>
+          <select name="dept_id" ngModel required class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:bg-slate-800">
+            <option value="">Select Dept</option>
+            @for (dept of departments(); track dept.id) {
+              <option [value]="dept.id">{{ dept.name }}</option>
+            }
+          </select>
         </div>
       </div>
 
       <div>
-        <label
-          class="block text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2"
-          >Official Email</label
-        >
-        <input
-          type="email"
-          name="email"
-          ngModel
-          required
-          class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-blue-500 outline-none"
-          placeholder="name@hospital.com"
-        />
+        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-2">Official Email</label>
+        <input type="email" name="email" ngModel required 
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:bg-slate-800 dark:text-white outline-none" 
+          placeholder="name@hospital.com" />
       </div>
 
       <div class="pt-10 space-y-3">
-        <button
-          type="submit"
-          [disabled]="!f.valid"
-          class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg shadow-blue-200 dark:shadow-none hover:bg-blue-700 transition-all disabled:opacity-50"
-        >
-          Save Staff Member
+        <button type="submit" [disabled]="!f.valid || isLoading()" 
+          class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold shadow-lg hover:bg-blue-700 disabled:opacity-50">
+          {{ isLoading() ? 'Creating Account...' : 'Register Staff Member' }}
         </button>
-        <button
-          type="button"
-          (click)="showForm.set(false)"
-          class="w-full py-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-semibold transition-all text-sm"
-        >
-          Cancel
-        </button>
+        <button type="button" (click)="showForm.set(false)" class="w-full py-3 text-slate-400 text-sm">Cancel</button>
       </div>
     </form>
   </div>

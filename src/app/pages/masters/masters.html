@@ -1,1 +1,51 @@
-<p>masters works!</p>
+<div class="p-8 bg-slate-50 min-h-screen dark:bg-slate-950">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold text-slate-800 dark:text-white mb-2">Role Permissions</h1>
+    <p class="text-slate-500 mb-8">Control which pages each staff role can access.</p>
+
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 mb-6">
+      <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Select Role to Configure</label>
+      <div class="flex gap-2 flex-wrap">
+        @for (role of roles(); track role.id) {
+          <button 
+            (click)="selectedRoleId.set(role.id)"
+            [class]="selectedRoleId() === role.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'"
+            class="px-5 py-2 rounded-xl font-medium transition-all">
+            {{ role.role_name }}
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (selectedRoleId()) {
+      <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+        <table class="w-full text-left">
+          <thead class="bg-slate-50 dark:bg-slate-800/50">
+            <tr>
+              <th class="p-4 text-xs font-bold text-slate-400 uppercase">Module / Document Name</th>
+              <th class="p-4 text-xs font-bold text-slate-400 uppercase text-center">Access</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            @for (perm of permissions(); track perm.doc_id) {
+              <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                <td class="p-4 text-slate-700 dark:text-slate-300 font-medium">{{ perm.doc_name }}</td>
+                <td class="p-4 text-center">
+                  <input 
+                    type="checkbox" 
+                    [checked]="perm.hasAccess"
+                    (change)="onToggle(perm.doc_id, $event)"
+                    class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer">
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="text-center py-20 bg-white dark:bg-slate-900 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+        <p class="text-slate-400">Please select a role above to manage permissions.</p>
+      </div>
+    }
+  </div>
+</div>
