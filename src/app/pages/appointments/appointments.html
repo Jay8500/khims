@@ -1,110 +1,208 @@
 <div class="p-8 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors">
-  
-  <div class="flex flex-wrap justify-between items-center mb-10 bg-white dark:bg-slate-900 p-8 rounded-[40px] shadow-sm border border-slate-100 dark:border-slate-800 transition-all">
+  <div
+    class="flex flex-wrap justify-between items-center mb-10 bg-white dark:bg-slate-900 p-8 rounded-[40px] shadow-sm border border-slate-100 dark:border-slate-800"
+  >
     <div>
-      <h1 class="text-3xl font-black text-slate-900 dark:text-white italic tracking-tighter">Daily Schedule</h1>
+      <h1 class="text-3xl font-black text-slate-900 dark:text-white italic tracking-tighter">
+        Daily Schedule
+      </h1>
       <div class="flex items-center gap-2 mt-1">
         <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-        <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-          Viewing: {{ selectedDate() | date:'mediumDate' }}
+        <p
+          class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest"
+        >
+          Viewing: {{ selectedDate() | date : 'longDate' }}
         </p>
       </div>
     </div>
 
-    <div class="flex items-center gap-4 mt-4 lg:mt-0">
-      <input type="date" [ngModel]="selectedDate()" (ngModelChange)="selectedDate.set($event)" 
-             class="px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all" />
-      
-      <button (click)="showBookingSidebar.set(true)" 
-              class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-blue-200 dark:shadow-none hover:bg-blue-700 transition-all active:scale-95">
+    <div class="flex items-center gap-4">
+      <input
+        type="date"
+        [ngModel]="selectedDate()"
+        (ngModelChange)="selectedDate.set($event); loadAppointments()"
+        class="px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20"
+      />
+
+      <button
+        (click)="showBookingSidebar.set(true)"
+        class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-blue-700 active:scale-95 transition-all"
+      >
         + New Booking
       </button>
     </div>
   </div>
 
-  <div class="grid gap-4">
-    @for (appt of filteredAppointments(); track appt.id) {
-      <div class="bg-white dark:bg-slate-900 p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between group hover:border-blue-300 dark:hover:border-blue-500/50 transition-all">
-        <div class="flex items-center gap-6">
-          <div class="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center font-black text-lg border border-blue-100 dark:border-blue-900/30">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    @for (appt of appointments(); track appt.id) {
+    <div
+      class="bg-white dark:bg-slate-900 rounded-[35px] p-1 border border-slate-100 dark:border-slate-800 hover:border-blue-500/50 transition-all group shadow-sm hover:shadow-xl"
+    >
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-6">
+          <div
+            class="w-14 h-14 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-2xl flex items-center justify-center font-black text-lg"
+          >
             {{ appt.time }}
           </div>
-          <div>
-            <h3 class="text-xl font-black text-slate-800 dark:text-slate-100">{{ appt.patientName }}</h3>
-            <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-              {{ appt.doctorName }} • <span class="text-blue-600 dark:text-blue-400">{{ appt.specialty }}</span>
-            </p>
-          </div>
+          <span
+            [class]="
+              'px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border ' +
+              (appt.status === 'Scheduled'
+                ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                : 'bg-slate-50 text-slate-400 border-slate-100')
+            "
+          >
+            {{ appt.status }}
+          </span>
         </div>
 
-        <div class="flex items-center gap-4">
-          <span class="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-900/30">
-            Confirmed
-          </span>
-          <button (click)="cancelAppointment(appt.id)" 
-                  class="opacity-0 group-hover:opacity-100 p-2 text-slate-300 dark:text-slate-600 hover:text-red-500 transition-all text-2xl">
-            ×
+        <div class="space-y-1 mb-6">
+          <h3 class="text-xl font-black text-slate-800 dark:text-white">{{ appt.patientName }}</h3>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            {{ appt.uhid || 'NO UHID' }}
+          </p>
+        </div>
+
+        <div
+          class="pt-6 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between"
+        >
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-500"
+            >
+              Dr
+            </div>
+            <div>
+              <p class="text-xs font-black text-slate-700 dark:text-slate-300">
+                {{ appt.doctorName }}
+              </p>
+              <p class="text-[9px] font-bold text-blue-500 uppercase">{{ appt.specialty }}</p>
+            </div>
+          </div>
+
+          <button
+            class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all flex items-center justify-center"
+          >
+            →
           </button>
         </div>
       </div>
+    </div>
     } @empty {
-      <div class="py-32 text-center bg-white dark:bg-slate-900 rounded-[50px] border-2 border-dashed border-slate-100 dark:border-slate-800">
-        <span class="text-5xl block mb-4">📅</span>
-        <p class="text-slate-400 dark:text-slate-500 font-black uppercase text-xs tracking-[0.2em]">No slots booked for this date</p>
-      </div>
+    <div
+      class="col-span-full py-32 text-center bg-white dark:bg-slate-900 rounded-[50px] border-2 border-dashed border-slate-100 dark:border-slate-800"
+    >
+      <span class="text-5xl block mb-4">📅</span>
+      <p class="text-slate-400 font-black uppercase text-xs tracking-[0.2em]">
+        No appointments for this date
+      </p>
+    </div>
     }
   </div>
 
   @if (showBookingSidebar()) {
-    <div class="fixed inset-0 z-[500] flex justify-end">
-      <div class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md transition-opacity" 
-           (click)="showBookingSidebar.set(false)"></div>
-      
-      <div class="relative w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl p-10 flex flex-col border-l dark:border-slate-800 animate-in slide-in-from-right duration-300">
-        
-        <div class="mb-10">
-          <h2 class="text-3xl font-black text-slate-800 dark:text-white italic">Book Slot</h2>
-          <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Assigning Patient to Doctor</p>
+  <div class="fixed inset-0 z-[500] flex justify-end">
+    <div
+      class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+      (click)="showBookingSidebar.set(false)"
+    ></div>
+    <div
+      class="relative w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl p-10 flex flex-col border-l dark:border-slate-800 animate-in slide-in-from-right"
+    >
+      <h2 class="text-3xl font-black text-slate-800 dark:text-white italic mb-10">Book Slot</h2>
+
+      <form #apptF="ngForm" (ngSubmit)="addAppointment(apptF.value)" class="space-y-6">
+        <div class="relative">
+          <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"
+            >Search Patient</label
+          >
+          @if (!selectedPatientForBooking()) {
+          <input
+            type="text"
+            (input)="onPatientSearch($event)"
+            placeholder="Search Name/UHID..."
+            class="w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold outline-none border border-transparent focus:border-blue-500"
+          />
+
+          @if (patientSearchResults().length > 0) {
+          <div
+            class="absolute z-10 w-full mt-2 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-2xl shadow-2xl max-h-48 overflow-y-auto"
+          >
+            @for (p of patientSearchResults(); track p.id) {
+            <div
+              (click)="selectPatient(p)"
+              class="p-4 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer border-b last:border-none dark:border-slate-700"
+            >
+              <p class="font-bold text-sm dark:text-white">{{ p.p_name }}</p>
+              <p class="text-[10px] text-slate-400">{{ p.uhid }}</p>
+            </div>
+            }
+          </div>
+          } } @else {
+          <div
+            class="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-2xl"
+          >
+            <div>
+              <p class="font-bold text-blue-700 dark:text-blue-400">
+                {{ selectedPatientForBooking().p_name }}
+              </p>
+              <p class="text-[10px] text-blue-500">{{ selectedPatientForBooking().uhid }}</p>
+            </div>
+            <button
+              type="button"
+              (click)="selectedPatientForBooking.set(null)"
+              class="text-red-500"
+            >
+              ✕
+            </button>
+          </div>
+          }
         </div>
 
-        <form #apptF="ngForm" (ngSubmit)="addAppointment(apptF.value)" class="flex-1 flex flex-col">
-          <div class="space-y-6 flex-1">
-            <div>
-              <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2">Patient Name</label>
-              <input type="text" name="patientName" ngModel required placeholder="Full Name" 
-                     class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold outline-none focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-blue-500/10 transition-all" />
-            </div>
+        <div>
+          <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"
+            >Assign Doctor</label
+          >
+          <select
+            name="doctor_id"
+            ngModel
+            required
+            class="w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold outline-none appearance-none"
+          >
+            <option value="" disabled>Select Doctor</option>
+            @for (doc of doctorList(); track doc.id) {
+            <option [value]="doc.id">{{ doc.full_name }}</option>
+            }
+          </select>
+        </div>
 
-            <div>
-              <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2">Assign Doctor</label>
-              <select name="doctorName" ngModel="Dr. Khanna" 
-                      class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold outline-none focus:ring-4 focus:ring-blue-500/10 transition-all appearance-none">
-                @for (doc of doctors; track doc.name) {
-                  <option [value]="doc.name" class="dark:bg-slate-900">{{ doc.name }} ({{ doc.specialty }})</option>
-                }
-              </select>
-            </div>
+        <div class="grid grid-cols-2 gap-4">
+          <input
+            type="date"
+            name="date"
+            [ngModel]="selectedDate()"
+            required
+            class="px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold outline-none"
+          />
+          <input
+            type="time"
+            name="time"
+            ngModel
+            required
+            class="px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold outline-none"
+          />
+        </div>
 
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2">Visit Date</label>
-                <input type="date" name="date" ngModel required 
-                       class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold outline-none" />
-              </div>
-              <div>
-                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2">Time Slot</label>
-                <input type="time" name="time" ngModel required 
-                       class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold outline-none" />
-              </div>
-            </div>
-          </div>
-
-          <button type="submit" [disabled]="!apptF.valid" 
-                  class="w-full py-5 bg-slate-900 dark:bg-blue-600 text-white rounded-[24px] font-black shadow-2xl hover:bg-blue-600 dark:hover:bg-blue-700 transition-all uppercase tracking-widest text-xs disabled:opacity-50 mt-6">
-            Confirm Booking Slot
-          </button>
-        </form>
-      </div>
+        <button
+          type="submit"
+          [disabled]="!apptF.valid || !selectedPatientForBooking()"
+          class="w-full py-5 bg-blue-600 text-white rounded-[24px] font-black shadow-2xl hover:bg-blue-700 disabled:opacity-50 transition-all uppercase tracking-widest text-xs"
+        >
+          Confirm Booking
+        </button>
+      </form>
     </div>
+  </div>
   }
 </div>

@@ -103,7 +103,7 @@ export class Staffs implements OnInit {
       // This creates the record in auth.users and returns the ID
       const { data: authData, error: authError } = await this.supabase.auth.signUp({
         email: formData.email,
-        password: 'TemporaryPassword123!', // You can change this later
+        password: 'hims1234', // You can change this later
         options: {
           data: { full_name: formData.full_name },
         },

@@ -77,14 +77,12 @@ export class Sidebar implements OnInit {
   }
 
   async loadMenu() {
-    console.log('response.data ');
     const response: ApiResponse<NavModule[]> = await this.supabase.getSidebarMenu();
     if (response.statusCode === 200) {
-      console.log('response.data ', response.data);
       // 2. Bind the 15 documents through the modules
       this.menuModules.set(response.data);
     } else {
-      console.error('Menu Error:', response.message);
+      // console.error('Menu Error:', response.message);
     }
   }
 

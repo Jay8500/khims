@@ -1,6 +1,7 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Supabase } from '../../services/supabase';
 
 interface Appointment {
   id: string;
@@ -18,53 +19,80 @@ interface Appointment {
   imports: [CommonModule, FormsModule],
   templateUrl: './appointments.html',
 })
-export class Appointments {
-  // 1. UI State
+export class Appointments implements OnInit {
+  private supabase = inject(Supabase);
+
+  // State
   showBookingSidebar = signal(false);
-  selectedDate = signal(new Date().toISOString().split('T')[0]); // Defaults to today: 2025-12-28
+  selectedDate = signal(new Date().toISOString().split('T')[0]);
+  appointments = signal<any[]>([]);
+  doctorList = signal<any[]>([]);
 
-  // 2. Data
-  doctors = [
-    { name: 'Dr. Khanna', specialty: 'Cardiology' },
-    { name: 'Dr. Reddy', specialty: 'Orthopedics' },
-    { name: 'Dr. Sharma', specialty: 'General Physician' },
-  ];
+  // Search State
+  patientSearchResults = signal<any[]>([]);
+  selectedPatientForBooking = signal<any>(null);
 
-  appointments = signal<Appointment[]>([
-    {
-      id: '1',
-      patientName: 'Alice Smith',
-      doctorName: 'Dr. Khanna',
-      specialty: 'Cardiology',
-      time: '10:00',
-      date: '2025-12-28',
-      status: 'Scheduled',
-    },
-  ]);
+  async ngOnInit() {
+    // 1. Check if we have the Hospital ID. If not, wait for it.
+    if (!this.supabase.currentHospitalId()) {
+      console.log('Waiting for tenant initialization...');
+      await this.supabase.initializeTenant();
+    }
 
-  // 3. Computed Filter (The Magic)
-  filteredAppointments = computed(() => {
-    return this.appointments().filter((a) => a.date === this.selectedDate());
-  });
+    // 2. Now that we definitely have the ID, load everything
+    await Promise.all([this.loadAppointments(), this.loadDoctors()]);
+  }
 
-  // 4. Methods
-  addAppointment(formValue: any) {
-    const newAppt: Appointment = {
-      id: 'APP-' + Date.now(),
-      patientName: formValue.patientName,
-      doctorName: formValue.doctorName,
-      specialty: this.doctors.find((d) => d.name === formValue.doctorName)?.specialty || 'General',
-      time: formValue.time,
-      date: formValue.date,
+  async loadDoctors() {
+    const h_id = this.supabase.currentHospitalId();
+    if (!h_id) return;
+
+    const res = await this.supabase.getStaffDirectory(h_id);
+    if (res.data) {
+      // Log for debugging
+      console.log('Doctors loaded:', res.data.length);
+
+      const doctors = res.data.filter((s: any) => s.role_name?.toLowerCase().includes('doctor'));
+      this.doctorList.set(doctors);
+    }
+  }
+
+  async loadAppointments() {
+    const res = await this.supabase.getAppointmentsByDate(this.selectedDate());
+    if (res.statusCode === 200) this.appointments.set(res.data);
+  }
+
+  async onPatientSearch(event: any) {
+    const term = event.target.value;
+    if (term.length > 2) {
+      const { data } = await this.supabase.searchPatients(term);
+      this.patientSearchResults.set(data || []);
+    } else {
+      this.patientSearchResults.set([]);
+    }
+  }
+
+  selectPatient(patient: any) {
+    this.selectedPatientForBooking.set(patient);
+    this.patientSearchResults.set([]);
+  }
+
+  async addAppointment(formValue: any) {
+    if (!this.selectedPatientForBooking()) return alert('Please select a patient');
+
+    const payload = {
+      patient_id: this.selectedPatientForBooking().id,
+      doctor_id: formValue.doctor_id,
+      appointment_date: formValue.date,
+      appointment_time: formValue.time,
       status: 'Scheduled',
     };
 
-    this.appointments.update((prev) => [...prev, newAppt]);
-    this.selectedDate.set(formValue.date); // Auto-jump to the date of the new booking
-    this.showBookingSidebar.set(false);
-  }
-
-  cancelAppointment(id: string) {
-    this.appointments.update((list) => list.filter((a) => a.id !== id));
+    const res = await this.supabase.saveAppointment(payload);
+    if (res.statusCode === 200) {
+      this.showBookingSidebar.set(false);
+      this.selectedPatientForBooking.set(null);
+      await this.loadAppointments();
+    }
   }
 }

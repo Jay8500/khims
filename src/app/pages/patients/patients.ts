@@ -49,33 +49,24 @@ export class Patients implements OnInit {
 
   async loadPatients() {
     this.isLoading.set(true);
-    this.patientList.set([
-      {
-        id: 1,
-        p_name: 'Saikiran  Doe',
-        age: 45,
-        gender: 'Male',
-        blood: 'O+',
-        phone: '9876543210',
-        uhid: 'HMS-101',
-      },
-      {
-        id: 2,
-        p_name: 'Jane Smith',
-        age: 32,
-        gender: 'Female',
-        blood: 'A-',
-        phone: '9123456789',
-        uhid: 'HMS-102',
-      },
-    ]);
+    const res = await this.supabase.getPatients();
+    if (res.statusCode === 200) {
+      this.patientList.set(res.data);
+    }
     // ... your fetch logic ...
     this.isLoading.set(false);
   }
 
-  savePatient(data: any) {
-    console.log('Saved:', data);
-    this.showPatientForm.set(false);
+  async savePatient(data: any) {
+    this.isLoading.set(true);
+    const res = await this.supabase.savePatient(data);
+    if (res.statusCode === 200) {
+      await this.loadPatients(); // Refresh list
+      this.showPatientForm.set(false);
+    } else {
+      alert(res.message);
+    }
+    this.isLoading.set(false);
   }
 
   openHistory(patient: any) {

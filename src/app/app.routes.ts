@@ -20,7 +20,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./layout/dashboard-shell/dashboard-shell').then((m) => m.DashboardShell),
     children: [
-      { path: '', redirectTo: 'staff', pathMatch: 'full' },
+      // { path: '', redirectTo: 'staff', pathMatch: 'full' },
       // Master Data Forms (Designation, Dept, etc.)
       {
         path: 'masters',
@@ -93,6 +93,7 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/admincalendar/admincalendar').then((m) => m.Admincalendar),
       },
+       { path: '**', redirectTo: 'login' },
     ],
   },
   // 4. Wildcard Route (404 Page)

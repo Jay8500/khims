@@ -3,12 +3,12 @@
 >
   <div
     class="glass-bubble w-96 h-96 -top-10 -right-10 animate-float opacity-40"
-    [style.background-color]="branding.hospitalConfig().primaryColor"
+    [style.background-color]="tenantInfo()?.brand_color"
   ></div>
 
   <div
     class="glass-bubble w-[500px] h-[500px] -bottom-20 -left-20 animate-float-slow opacity-30"
-    [style.background-color]="branding.hospitalConfig().primaryColor"
+    [style.background-color]="tenantInfo()?.brand_color"
   ></div>
 
   <div class="hims-glass-card relative max-w-md w-full rounded-[50px] p-2">
@@ -17,16 +17,17 @@
     >
       <div
         class="absolute top-[-60px] left-1/2 -translate-x-1/2 w-48 h-48 rounded-full blur-[50px] opacity-20"
-        [style.background-color]="branding.hospitalConfig().primaryColor"
+        [style.background-color]="tenantInfo()?.brand_color"
       ></div>
 
       <div class="relative z-20 flex flex-col items-center mb-10 text-center">
-        @if (branding.hospitalConfig().logo) {
+        <!-- @if (branding.hospitalConfig().logo) { -->
+        @if (tenantInfo()?.logo_url) {
         <div
           class="bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-white shadow-sm mb-4"
         >
           <img
-            [src]="branding.hospitalConfig().logo"
+            [src]="tenantInfo()?.logo_url"
             class="h-10 w-auto object-contain"
             alt="Logo"
           />
@@ -35,13 +36,13 @@
 
         <h1
           class="text-lg font-black uppercase tracking-[0.3em] italic"
-          [style.color]="branding.hospitalConfig().primaryColor"
+          [style.color]="tenantInfo()?.brand_color"
         >
-          {{ branding.hospitalConfig().name }}
+          {{ tenantInfo()?.name }}
         </h1>
         <div
           class="w-10 h-1 rounded-full mt-2 opacity-30"
-          [style.background-color]="branding.hospitalConfig().primaryColor"
+          [style.background-color]="tenantInfo()?.brand_color"
         ></div>
       </div>
 
@@ -95,7 +96,7 @@
         <button
           type="submit"
           [disabled]="loading"
-          [style.background-color]="branding.hospitalConfig().primaryColor"
+          [style.background-color]="tenantInfo()?.brand_color"
           class="w-full text-white font-black py-5 rounded-[24px] shadow-xl shadow-blue-500/20 transition-all transform active:scale-[0.96] hover:brightness-110 disabled:opacity-50 uppercase text-[11px] tracking-widest mt-4"
         >
           {{ loading ? 'Securing Connection...' : 'Identify & Login' }}
@@ -110,14 +111,14 @@
       <div
         class="mt-10 flex items-center justify-center gap-2.5 opacity-80 transition-all hover:opacity-100 hover:scale-[1.02]"
       >
-        <span class="text-[7px] font-black text-slate-400 uppercase tracking-[0.3em]">
+        <span class="text-[7px] font-black text-slate-900 uppercase tracking-[0.3em]">
           Powered by
         </span>
 
         <div
           class="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[9px] font-black italic tracking-wider shadow-md border border-white/5 relative z-30"
         >
-          Jaya Krishna Lakkoju
+          Spread Apps
         </div>
       </div>
     </div>

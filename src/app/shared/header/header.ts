@@ -23,13 +23,14 @@ import { Theme } from '../../services/theme';
 export class Header implements OnInit {
   private eRef = inject(ElementRef);
   isProfileOpen = signal(false);
-  private supabase = inject(Supabase);
+  public supabase = inject(Supabase);
   public branding = inject(Branding);
   private router = inject(Router);
   private themeService = inject(Theme);
 
   userEmail = signal('');
   userInitial = signal('');
+  public tenantInfo: any = signal<any>({});
 
   // --- ADD THIS LOGIC ---
   @HostListener('document:click', ['$event'])
@@ -54,10 +55,15 @@ export class Header implements OnInit {
   }
 
   async ngOnInit() {
+    this.tenantInfo.set(this.supabase.getTenantInfo());
     const { data } = await this.supabase.client.auth.getUser();
     if (data.user?.email) {
-      this.userEmail.set(data.user.email);
+      this.userEmail.set(data.user.email ?? '');
       // Fixed: Setting initial to the first letter of email
+      await this.supabase.fetchUserProfile(data.user.id);
+
+      // Update Initial based on First Name if available, else Email
+      const profile = this.supabase.currentProfile();
       let usEmail = data.user.email.charAt(0);
       this.userInitial.set(usEmail);
     }

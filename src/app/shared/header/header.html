@@ -12,20 +12,20 @@
     </button>
 
     <div class="flex items-center gap-3">
-      @if (branding.hospitalConfig().logo) {
-      <img [src]="branding.hospitalConfig().logo" class="h-10 w-auto object-contain" />
+      @if (tenantInfo().logo_url) {
+      <img [src]="tenantInfo().logo_url" class="h-10 w-auto object-contain" />
       } @else {
       <span
         class="text-2xl font-black italic"
-        [style.color]="branding.hospitalConfig().primaryColor"
+        [style.color]="tenantInfo().brand_color"
         >HMS</span
       >
       }
       <span
         class="text-xl font-black italic tracking-tighter"
-        [style.color]="branding.hospitalConfig().primaryColor"
+        [style.color]="tenantInfo().brand_color"
       >
-        {{ branding.hospitalConfig().name }}
+        {{ tenantInfo().name }}
       </span>
     </div>
   </div>
@@ -39,9 +39,9 @@
     >
       <div class="hidden md:block text-right mr-1">
         <p class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase leading-none">
-          Admin
+          {{supabase.currentProfile()?.roles?.role_name}}
         </p>
-        <p class="text-[10px] text-slate-400 dark:text-slate-500">{{ userEmail() }}</p>
+        <p class="text-[10px] text-slate-800 dark:text-slate-700">{{ userEmail() }}</p>
       </div>
       <div
         class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold shadow-inner"
@@ -69,11 +69,11 @@
         <p
           class="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-widest mt-1"
         >
-          Admin Access
+         {{supabase.currentProfile()?.roles?.role_name}}
         </p>
       </div>
 
-      <div class="p-5 bg-slate-50/50 dark:bg-slate-800/50">
+      <!-- <div class="p-5 bg-slate-50/50 dark:bg-slate-800/50">
         <div class="flex items-center gap-2 mb-3">
           <div class="w-1 h-3 rounded-full bg-red-500"></div>
           <p
@@ -100,7 +100,7 @@
           </div>
           }
         </div>
-      </div>
+      </div> -->
 
       <div class="px-6 py-4 border-b border-slate-50 dark:border-slate-800">
         <p

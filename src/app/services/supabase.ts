@@ -14,12 +14,18 @@ export class Supabase {
   private sessionChannel = new BroadcastChannel('hms_session_guard');
   public currentUser = signal<any>(null); // Added this
 
+  // --- NEW TENANT STATE ---
+  public currentTenant = signal<any>(null); // Stores Name, Logo, Brand Color
+  public currentHospitalId = signal<string | null>(null); // Stores the UUID
+  // -------------------------
+
   constructor() {
     // Use dot notation (no brackets, no quotes)
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
     // Initial check on load
     this.supabase.auth.getSession().then(({ data }) => {
       this.currentUser.set(data.session?.user ?? null);
+      this.initializeTenant();
     });
     this.supabase.auth.onAuthStateChange((event, session) => {
       this.currentUser.set(session?.user ?? null); // Keep signal in sync
@@ -30,6 +36,36 @@ export class Supabase {
     });
     this.initSessionGuard();
   }
+
+  /**
+   * Automatically detects tenant from URL Slug
+   * Example: /apollo/dashboard -> 'apollo'
+   */
+  async initializeTenant() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pathSlug = window.location.pathname.split('/')[1];
+
+    // 1. Priority: URL Param (?h=) > URL Path (/apollo) > Last Saved > Default
+    // const slug = urlParams.get('h') ||
+    //              (pathSlug !== 'login' ? pathSlug : null) ||
+    //              localStorage.getItem('preferred_tenant') ||
+    //              'apollo';
+
+    // 2. Save it for later (so it survives login/redirects)
+    localStorage.setItem('preferred_tenant', 'Care Clinic');
+
+    const { data, error } = await this.supabase.rpc('get_hospital_by_slug', {
+      p_slug: 'Care Clinic', //slug
+    });
+
+    if (data?.statusCode === 200) {
+      this.currentTenant.set(data.data);
+      localStorage.setItem('tenant_info', JSON.stringify(this.currentTenant()));
+      this.currentHospitalId.set(data.data.id);
+      // console.log(`Initialized Tenant: ${data.data.name}`);
+    }
+  }
+
   private tabId = Math.random().toString(36).substring(7);
   get hasActiveSession(): boolean {
     return !!this.currentUser();
@@ -129,8 +165,9 @@ export class Supabase {
     currentHospitalId: string
   ): Promise<ApiResponse<{ departments: any[]; roles: any[] }>> {
     try {
+      // console.log("this.currentHospitalId ",this.currentHospitalId0)
       const { data, error } = await this.supabase.rpc('get_staff_form_masters', {
-        _h_id: currentHospitalId, // <--- This MUST match the SQL parameter name now
+        _h_id: this.currentHospitalId(), // <--- This MUST match the SQL parameter name now
       });
 
       if (error) throw error;
@@ -154,7 +191,7 @@ export class Supabase {
   // Fetches the directory for the cards
   async getStaffDirectory(hospitalId: string): Promise<ApiResponse<any[]>> {
     const { data, error } = await this.supabase.rpc('get_hospital_staff', {
-      p_hospital_id: hospitalId,
+      p_hospital_id: this.currentHospitalId(),
     });
     if (error) return { statusCode: 500, message: error.message, data: [] };
     return { statusCode: 200, message: 'Success', data: data };
@@ -191,5 +228,143 @@ export class Supabase {
       p_doc_id: docId,
       p_state: state,
     });
+  }
+
+  getTenantInfo() {
+    let tntInfo = null;
+    let getTenantInfo: any = localStorage.getItem('tenant_info');
+    if (getTenantInfo) {
+      getTenantInfo = JSON.parse(getTenantInfo);
+      tntInfo = getTenantInfo;
+    }
+    return tntInfo;
+  }
+
+  // --- IN YOUR supabase.ts ---
+
+  // 1. Add the signal
+  public currentProfile = signal<any>(null);
+
+  // 2. Add this method to fetch the detailed profile
+  async fetchUserProfile(userId: string) {
+    const { data, error } = await this.supabase
+      .from('staff_profiles')
+      .select(
+        `
+      full_name,
+      roles (role_name),
+      departments (name)
+    `
+      )
+      .eq('id', userId)
+      .single();
+
+    if (data) {
+      this.currentProfile.set(data);
+    }
+    // console.log("err ",error)
+  }
+  // --- IN YOUR supabase.ts ---
+
+  // Update this in your supabase.ts
+  async getPatients(): Promise<ApiResponse<any[]>> {
+    // 1. Force a check: Is the hospital ID actually set?
+    let h_id = this.currentHospitalId();
+
+    // 2. If it's missing, try to re-initialize once
+    if (!h_id || h_id === 'null') {
+      await this.initializeTenant();
+      h_id = this.currentHospitalId();
+    }
+
+    // 3. Final Guard: If still null, return empty to prevent the 22P02 crash
+    if (!h_id || h_id === 'null') {
+      console.error('Fetch blocked: Hospital ID is invalid.');
+      return { statusCode: 200, message: 'Waiting for context...', data: [] };
+    }
+
+    const { data, error } = await this.supabase
+      .from('patients')
+      .select(
+        `
+      *,
+      departments (name)
+    `
+      )
+      .eq('hospital_id', h_id)
+      .order('created_at', { ascending: false });
+
+    if (error) return { statusCode: 500, message: error.message, data: [] };
+    return { statusCode: 200, message: 'Success', data: data };
+  }
+  async savePatient(payload: any): Promise<ApiResponse<any>> {
+    // Inject the current tenant ID for security
+    const finalPayload = {
+      ...payload,
+      hospital_id: this.currentHospitalId(),
+    };
+
+    const { data, error } = await this.supabase.rpc('upsert_patient', {
+      p_data: finalPayload,
+    });
+
+    if (error) return { statusCode: 400, message: error.message, data: null };
+    return data;
+  }
+
+  // --- IN YOUR Supabase Service ---
+
+  // supabase.ts modification
+  async getAppointmentsByDate(date: string): Promise<ApiResponse<any[]>> {
+    const h_id = this.currentHospitalId();
+    if (!h_id) return { statusCode: 404, message: 'Hospital ID not set', data: [] };
+
+    const { data, error } = await this.supabase
+      .from('appointments')
+      .select(
+        `
+      id, appointment_time, status,
+      patients (p_name, uhid),
+      staff_profiles (full_name, departments (name))
+    `
+      )
+      .eq('hospital_id', h_id)
+      .eq('appointment_date', date)
+      .order('appointment_time', { ascending: true });
+
+    if (error) return { statusCode: 500, message: error.message, data: [] };
+
+    // Transform and Map
+    const formatted = data.map((a: any) => ({
+      id: a.id,
+      time: a.appointment_time.slice(0, 5),
+      patientName: a.patients?.p_name || 'Unknown Patient',
+      uhid: a.patients?.uhid,
+      doctorName: a.staff_profiles?.full_name || 'No Doctor Assigned',
+      specialty: a.staff_profiles?.departments?.name || 'General',
+      status: a.status,
+    }));
+
+    return { statusCode: 200, message: 'Success', data: formatted };
+  }
+
+  // 2. Search patients for the lookup
+  async searchPatients(query: string) {
+    return await this.supabase
+      .from('patients')
+      .select('id, p_name, uhid, phone')
+      .eq('hospital_id', this.currentHospitalId())
+      .ilike('p_name', `%${query}%`)
+      .limit(5);
+  }
+
+  // 3. Save Appointment
+  async saveAppointment(payload: any) {
+    const { error } = await this.supabase.from('appointments').insert({
+      ...payload,
+      hospital_id: this.currentHospitalId(),
+      created_by: this.currentUser()?.id,
+    });
+    return error ? { statusCode: 400, message: error.message } : { statusCode: 200 };
   }
 }

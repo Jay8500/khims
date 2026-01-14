@@ -21,30 +21,64 @@ export class Login {
   public branding = inject(Branding);
   private router = inject(Router);
   isSubmitted = signal(false);
-  constructor(private toaster: Toaster) {}
+  public tenantInfo: any = signal<any>({});
+
+  constructor(private toaster: Toaster) {
+    this.tenantInfo.set(this.supabase.getTenantInfo());
+  }
+
   async handleLogin(form: NgForm) {
     this.isSubmitted.set(true);
 
-    // 3. Prevent Supabase call if form is invalid
     if (form.invalid) {
       this.toaster.show('Please fill in all fields correctly', 'warning');
       return;
     }
 
     this.loading = true;
+
+    // 1. Authenticate with Supabase Auth
     const { data, error } = await this.supabase.auth.signInWithPassword({
       email: this.email,
       password: this.password,
     });
 
     if (error) {
-      // 4. Use Toaster instead of Alert for a pro HIMS look
       this.toaster.show(error.message, 'error');
-      this.isSubmitted.set(false); // Reset to allow "Shake" again
-    } else if (data.session) {
-      // this.toaster.show('Login Successful! Welcome back.', 'success');
+      this.loading = false;
+      return;
+    }
+
+    if (data.session) {
+      const userId = data.session.user.id;
+      // Get the ID of the hospital currently shown on the login page
+      const activeHospitalId = this.supabase.currentHospitalId();
+      // 2. THE MEMBERSHIP GUARD
+      // Does this user exist in the staff_profiles for THIS hospital?
+      const { data: profile, error: profileError } = await this.supabase.client
+        .from('staff_profiles')
+        .select('id, hospital_id')
+        .eq('id', userId)
+        .eq('hospital_id', activeHospitalId)
+        .single();
+
+      if (profileError || !profile) {
+        // Logic: User is valid in Auth, but doesn't work for this specific hospital
+        await this.supabase.auth.signOut();
+        this.toaster.show(
+          `Access Denied: You are not a registered staff member of ${
+            this.branding.hospitalConfig().name
+          }`,
+          'error'
+        );
+        this.loading = false;
+        return;
+      }
+
+      // 3. Success! They belong here.
       this.router.navigate(['/dashboard']);
     }
+
     this.loading = false;
   }
 }
