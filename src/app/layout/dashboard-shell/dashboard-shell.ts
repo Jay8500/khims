@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, effect } from '@angular/core';
 import {
   Router,
   RouterOutlet,
@@ -39,6 +39,24 @@ export class DashboardShell {
       ) {
         // Add a tiny delay (200ms) so the loader doesn't "flicker" on fast loads
         setTimeout(() => this.isLoading.set(false), 200);
+      }
+    });
+
+    // Inside dashboard-shell.ts constructor
+    effect(() => {
+      const menu = this.supabase.currentMenuModules();
+      const currentUrl = this.router.url;
+
+      // Exact check for root or empty path after /dashboard
+      const isAtRoot = currentUrl === '/dashboard' || currentUrl === '/dashboard/';
+
+      if (isAtRoot && menu.length > 0) {
+        const firstModule = menu[0];
+        const firstDoc = firstModule.documents?.[0];
+        if (firstDoc?.doc_route) {
+          // Use navigateByUrl for cleaner absolute routing
+          this.router.navigateByUrl(`${firstDoc.doc_route}`);
+        }
       }
     });
   }

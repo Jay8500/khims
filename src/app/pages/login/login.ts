@@ -69,12 +69,12 @@ export class Login {
           `Access Denied: You are not a registered staff member of ${
             this.branding.hospitalConfig().name
           }`,
-          'error'
+          'error',
         );
         this.loading = false;
         return;
       }
-
+      await this.supabase.refreshMenu();
       // 3. Success! They belong here.
       this.router.navigate(['/dashboard']);
     }

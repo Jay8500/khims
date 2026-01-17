@@ -13,7 +13,7 @@ export class Supabase {
   public isDuplicateTab = signal(false);
   private sessionChannel = new BroadcastChannel('hms_session_guard');
   public currentUser = signal<any>(null); // Added this
-
+  public currentMenuModules = signal<any[]>([]);
   // --- NEW TENANT STATE ---
   public currentTenant = signal<any>(null); // Stores Name, Logo, Brand Color
   public currentHospitalId = signal<string | null>(null); // Stores the UUID
@@ -63,6 +63,14 @@ export class Supabase {
       localStorage.setItem('tenant_info', JSON.stringify(this.currentTenant()));
       this.currentHospitalId.set(data.data.id);
       // console.log(`Initialized Tenant: ${data.data.name}`);
+      this.refreshMenu();
+    }
+  }
+
+  async refreshMenu() {
+    const res = await this.getSidebarMenu();
+    if (res.statusCode === 200) {
+      this.currentMenuModules.set(res.data);
     }
   }
 
@@ -162,7 +170,7 @@ export class Supabase {
 
   // Fetches both Departments and Roles for dropdowns
   async getStaffFormMasters(
-    currentHospitalId: string
+    currentHospitalId: string,
   ): Promise<ApiResponse<{ departments: any[]; roles: any[] }>> {
     try {
       // console.log("this.currentHospitalId ",this.currentHospitalId0)
@@ -206,7 +214,7 @@ export class Supabase {
         `
       doc_id, doc_name,
       hms_role_permissions(role_id)
-    `
+    `,
       )
       .eq('hms_role_permissions.role_id', roleId);
 
@@ -254,7 +262,7 @@ export class Supabase {
       full_name,
       roles (role_name),
       departments (name)
-    `
+    `,
       )
       .eq('id', userId)
       .single();
@@ -289,7 +297,7 @@ export class Supabase {
         `
       *,
       departments (name)
-    `
+    `,
       )
       .eq('hospital_id', h_id)
       .order('created_at', { ascending: false });
@@ -313,41 +321,6 @@ export class Supabase {
   }
 
   // --- IN YOUR Supabase Service ---
-
-  // supabase.ts modification
-  async getAppointmentsByDate(date: string): Promise<ApiResponse<any[]>> {
-    const h_id = this.currentHospitalId();
-    if (!h_id) return { statusCode: 404, message: 'Hospital ID not set', data: [] };
-
-    const { data, error } = await this.supabase
-      .from('appointments')
-      .select(
-        `
-      id, appointment_time, status,
-      patients (p_name, uhid),
-      staff_profiles (full_name, departments (name))
-    `
-      )
-      .eq('hospital_id', h_id)
-      .eq('appointment_date', date)
-      .order('appointment_time', { ascending: true });
-
-    if (error) return { statusCode: 500, message: error.message, data: [] };
-
-    // Transform and Map
-    const formatted = data.map((a: any) => ({
-      id: a.id,
-      time: a.appointment_time.slice(0, 5),
-      patientName: a.patients?.p_name || 'Unknown Patient',
-      uhid: a.patients?.uhid,
-      doctorName: a.staff_profiles?.full_name || 'No Doctor Assigned',
-      specialty: a.staff_profiles?.departments?.name || 'General',
-      status: a.status,
-    }));
-
-    return { statusCode: 200, message: 'Success', data: formatted };
-  }
-
   // 2. Search patients for the lookup
   async searchPatients(query: string) {
     return await this.supabase
@@ -366,5 +339,92 @@ export class Supabase {
       created_by: this.currentUser()?.id,
     });
     return error ? { statusCode: 400, message: error.message } : { statusCode: 200 };
+  }
+
+  async saveVitals(payload: any): Promise<ApiResponse<any>> {
+    const h_id = this.currentHospitalId();
+    if (!h_id) return { statusCode: 401, message: 'Hospital context missing', data: null };
+
+    // Use a unique name for the internal supabase result
+    const result = await this.supabase
+      .from('patient_vitals')
+      .insert({
+        ...payload,
+        hospital_id: h_id,
+        recorded_by: this.currentUser()?.id,
+      })
+      .select()
+      .single();
+
+    if (result.error) {
+      return { statusCode: 400, message: result.error.message, data: null };
+    }
+
+    return { statusCode: 200, message: 'Success', data: result.data };
+  }
+
+  async getAppointmentsByDate(date: string): Promise<ApiResponse<any[]>> {
+    const h_id = this.currentHospitalId();
+    if (!h_id) return { statusCode: 404, message: 'Hospital ID not set', data: [] };
+
+    const { data, error } = await this.supabase
+      .from('appointments')
+      .select(
+        `
+      id, 
+      appointment_time, 
+      status, 
+      patient_id,
+      patients (p_name, uhid),
+      staff_profiles (id, full_name, departments (name)),
+      patient_vitals (temp_c, blood_pressure, pulse_rate, sp_o2)
+    `,
+      )
+      .eq('hospital_id', h_id)
+      .eq('appointment_date', date)
+      .order('appointment_time', { ascending: true });
+
+    if (error) return { statusCode: 500, message: error.message, data: [] };
+    // This formatting step is CRITICAL
+    const formatted = data.map((a: any) => ({
+      id: a.id,
+      patient_id: a.patient_id,
+      doctor_id: a.staff_profiles?.id,
+      time: a.appointment_time.slice(0, 5), // Changes "05:52:00" to "05:52"
+      patientName: a.patients?.p_name || 'Unknown', // Maps 'patients.p_name' to 'patientName'
+      uhid: a.patients?.uhid,
+      doctorName: a.staff_profiles?.full_name,
+      specialty: a.staff_profiles?.departments?.name,
+      status: a.status,
+      // Supabase joins return arrays. We take the first vitals entry if it exists.
+      vitals: Object.keys(a.patient_vitals).length > 0 ? a.patient_vitals : null,
+    }));
+    return { statusCode: 200, message: 'Success', data: formatted };
+  }
+  /**
+   * 4. BILLING & WORKFLOW METHODS
+   */
+
+  // Saves the bill to the 'billing' table
+  async saveBilling(payload: any): Promise<ApiResponse<any>> {
+    const { data, error } = await this.supabase.from('billing').insert(payload).select().single();
+
+    if (error) {
+      return { statusCode: 400, message: error.message, data: null };
+    }
+    return { statusCode: 200, message: 'Bill generated successfully', data: data };
+  }
+
+  // Updates the appointment status (e.g., from 'Scheduled' to 'Completed')
+  async updateAppointmentStatus(apptId: string, status: string): Promise<ApiResponse<any>> {
+    const { data, error } = await this.supabase
+      .from('appointments')
+      .update({ status: status })
+      .eq('id', apptId);
+
+    if (error) {
+      return { statusCode: 400, message: error.message, data: null };
+    }
+    return { statusCode: 200, message: 'Status updated', data: data };
   }
 }

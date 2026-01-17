@@ -23,7 +23,6 @@
         (ngModelChange)="selectedDate.set($event); loadAppointments()"
         class="px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20"
       />
-
       <button
         (click)="showBookingSidebar.set(true)"
         class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl hover:bg-blue-700 active:scale-95 transition-all"
@@ -32,7 +31,6 @@
       </button>
     </div>
   </div>
-
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     @for (appt of appointments(); track appt.id) {
     <div
@@ -64,28 +62,79 @@
           </p>
         </div>
 
+        @if (appt.vitals) {
         <div
-          class="pt-6 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between"
+          class="grid grid-cols-4 gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl mb-6 border border-slate-100 dark:border-slate-800"
         >
-          <div class="flex items-center gap-3">
-            <div
-              class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-500"
+          <div class="text-center">
+            <p class="text-[7px] font-black text-slate-400 uppercase">Temp</p>
+            <p class="text-[10px] font-bold text-orange-600">{{ appt.vitals.temp_c }}°</p>
+          </div>
+          <div class="text-center">
+            <p class="text-[7px] font-black text-slate-400 uppercase">BP</p>
+            <p class="text-[10px] font-bold text-red-600">{{ appt.vitals.blood_pressure }}</p>
+          </div>
+          <div class="text-center">
+            <p class="text-[7px] font-black text-slate-400 uppercase">Pulse</p>
+            <p class="text-[10px] font-bold text-emerald-600">{{ appt.vitals.pulse_rate }}</p>
+          </div>
+          <div class="text-center">
+            <p class="text-[7px] font-black text-slate-400 uppercase">SpO2</p>
+            <p class="text-[10px] font-bold text-blue-600">{{ appt.vitals.sp_o2 }}%</p>
+          </div>
+        </div>
+        }
+
+        <div class="pt-4 border-t border-slate-50 dark:border-slate-800">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black text-slate-500"
+              >
+                Dr
+              </div>
+              <div>
+                <p class="text-[11px] font-black text-slate-700 dark:text-slate-300 leading-none">
+                  {{ appt.doctorName }}
+                </p>
+                <p class="text-[9px] font-bold text-blue-500 uppercase mt-1">
+                  {{ appt.specialty }}
+                </p>
+              </div>
+            </div>
+            <button
+              (click)="openDetailedSidebar(appt)"
+              class="w-8 h-8 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center"
             >
-              Dr
-            </div>
-            <div>
-              <p class="text-xs font-black text-slate-700 dark:text-slate-300">
-                {{ appt.doctorName }}
-              </p>
-              <p class="text-[9px] font-bold text-blue-500 uppercase">{{ appt.specialty }}</p>
-            </div>
+              →
+            </button>
           </div>
 
+          @if (appt.status === 'Scheduled') {
+          <div class="flex gap-2">
+            @if (!appt.vitals) {
+            <button
+              (click)="openVitalsSidebar(appt)"
+              class="flex-1 py-3 bg-blue-50 text-blue-600 dark:bg-blue-900/20 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all"
+            >
+              📝 Record Triage
+            </button>
+            } @else {
+            <button
+              (click)="openDetailedSidebar(appt)"
+              class="flex-1 py-3 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 rounded-xl font-black text-[10px] uppercase tracking-widest border border-emerald-100 dark:border-emerald-900/30"
+            >
+              ✅ Vitals Ready →
+            </button>
+            }
+          </div>
+          } @else if (appt.status === 'Completed') {
           <button
-            class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all flex items-center justify-center"
+            class="w-full py-3 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-xl font-black text-[10px] uppercase cursor-not-allowed"
           >
-            →
+            🏁 Visit Finished
           </button>
+          }
         </div>
       </div>
     </div>
@@ -101,107 +150,164 @@
     }
   </div>
 
-  @if (showBookingSidebar()) {
-  <div class="fixed inset-0 z-[500] flex justify-end">
+  @if (showDetailedSidebar()) {
+  <div class="fixed inset-0 z-[700] flex justify-end">
     <div
       class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
-      (click)="showBookingSidebar.set(false)"
+      (click)="showDetailedSidebar.set(false)"
     ></div>
     <div
-      class="relative w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl p-10 flex flex-col border-l dark:border-slate-800 animate-in slide-in-from-right"
+      class="relative w-full max-w-lg bg-slate-50 dark:bg-slate-950 h-full shadow-2xl flex flex-col border-l dark:border-slate-800 animate-in slide-in-from-right"
     >
-      <h2 class="text-3xl font-black text-slate-800 dark:text-white italic mb-10">Book Slot</h2>
-
-      <form #apptF="ngForm" (ngSubmit)="addAppointment(apptF.value)" class="space-y-6">
-        <div class="relative">
-          <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"
-            >Search Patient</label
+      <div class="p-8 bg-white dark:bg-slate-900 border-b dark:border-slate-800">
+        <div class="flex justify-between items-start">
+          <div>
+            <h2 class="text-2xl font-black text-slate-800 dark:text-white italic">
+              {{ selectedAppt()?.patientName }}
+            </h2>
+            <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mt-1">
+              Status: {{ selectedAppt()?.status }}
+            </p>
+          </div>
+          <button
+            (click)="showDetailedSidebar.set(false)"
+            class="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 hover:text-red-500 transition-colors"
           >
-          @if (!selectedPatientForBooking()) {
-          <input
-            type="text"
-            (input)="onPatientSearch($event)"
-            placeholder="Search Name/UHID..."
-            class="w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold outline-none border border-transparent focus:border-blue-500"
-          />
+            ✕
+          </button>
+        </div>
+      </div>
 
-          @if (patientSearchResults().length > 0) {
-          <div
-            class="absolute z-10 w-full mt-2 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-2xl shadow-2xl max-h-48 overflow-y-auto"
-          >
-            @for (p of patientSearchResults(); track p.id) {
+      <div class="flex-1 overflow-y-auto p-8 space-y-8">
+        <div>
+          <h4 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-[0.2em]">
+            Nurse Triage Record
+          </h4>
+          @if (selectedAppt()?.vitals) {
+          <div class="grid grid-cols-2 gap-3">
             <div
-              (click)="selectPatient(p)"
-              class="p-4 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer border-b last:border-none dark:border-slate-700"
+              class="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-2xl border border-orange-100 dark:border-orange-900/30"
             >
-              <p class="font-bold text-sm dark:text-white">{{ p.p_name }}</p>
-              <p class="text-[10px] text-slate-400">{{ p.uhid }}</p>
+              <p class="text-[8px] font-black text-orange-600 uppercase">Temp</p>
+              <p class="text-xl font-black text-orange-700 dark:text-orange-400">
+                {{ selectedAppt()?.vitals.temp_c }}°C
+              </p>
             </div>
-            }
+            <div
+              class="p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-900/30"
+            >
+              <p class="text-[8px] font-black text-red-600 uppercase">BP</p>
+              <p class="text-xl font-black text-red-700 dark:text-red-400">
+                {{ selectedAppt()?.vitals.blood_pressure }}
+              </p>
+            </div>
+            <div
+              class="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-900/30"
+            >
+              <p class="text-[8px] font-black text-emerald-600 uppercase">Pulse</p>
+              <p class="text-xl font-black text-emerald-700 dark:text-emerald-400">
+                {{ selectedAppt()?.vitals.pulse_rate }}
+              </p>
+            </div>
+            <div
+              class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-900/30"
+            >
+              <p class="text-[8px] font-black text-blue-600 uppercase">SpO2</p>
+              <p class="text-xl font-black text-blue-700 dark:text-blue-400">
+                {{ selectedAppt()?.vitals.sp_o2 }}%
+              </p>
+            </div>
+          </div>
+
+          @if (selectedAppt()?.status !== 'Completed') {
+          <div class="mt-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h4 class="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-[0.2em]">
+              Next Steps
+            </h4>
+            <div class="grid grid-cols-2 gap-4">
+              <button
+                (click)="activeSidebarTab.set('billing')"
+                [class]="
+                  activeSidebarTab() === 'billing'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'bg-white dark:bg-slate-900'
+                "
+                class="flex flex-col items-center justify-center p-6 rounded-[30px] border border-slate-100 dark:border-slate-800 hover:scale-[1.02] transition-all group shadow-sm"
+              >
+                <span class="text-2xl mb-2">💰</span>
+                <span
+                  class="text-[10px] font-black uppercase text-slate-500 group-hover:text-blue-600"
+                  >OP Billing</span
+                >
+              </button>
+
+              <button
+                (click)="activeSidebarTab.set('labs')"
+                [class]="
+                  activeSidebarTab() === 'labs'
+                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                    : 'bg-white dark:bg-slate-900'
+                "
+                class="flex flex-col items-center justify-center p-6 rounded-[30px] border border-slate-100 dark:border-slate-800 hover:scale-[1.02] transition-all group shadow-sm"
+              >
+                <span class="text-2xl mb-2">🧪</span>
+                <span
+                  class="text-[10px] font-black uppercase text-slate-500 group-hover:text-emerald-600"
+                  >Lab Orders</span
+                >
+              </button>
+            </div>
           </div>
           } } @else {
           <div
-            class="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/30 rounded-2xl"
+            class="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[35px] text-center bg-white/50 dark:bg-slate-900/50"
           >
-            <div>
-              <p class="font-bold text-blue-700 dark:text-blue-400">
-                {{ selectedPatientForBooking().p_name }}
-              </p>
-              <p class="text-[10px] text-blue-500">{{ selectedPatientForBooking().uhid }}</p>
-            </div>
-            <button
-              type="button"
-              (click)="selectedPatientForBooking.set(null)"
-              class="text-red-500"
-            >
-              ✕
-            </button>
+            <span class="text-4xl block mb-4">🩺</span>
+            <p class="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">
+              Triage Required
+            </p>
+            <p class="text-[10px] font-bold text-slate-400 italic leading-relaxed">
+              Record the patient's vitals to enable <br />
+              Billing and Lab Order actions.
+            </p>
           </div>
           }
         </div>
-
-        <div>
-          <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"
-            >Assign Doctor</label
-          >
-          <select
-            name="doctor_id"
-            ngModel
-            required
-            class="w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold outline-none appearance-none"
-          >
-            <option value="" disabled>Select Doctor</option>
-            @for (doc of doctorList(); track doc.id) {
-            <option [value]="doc.id">{{ doc.full_name }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <input
-            type="date"
-            name="date"
-            [ngModel]="selectedDate()"
-            required
-            class="px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold outline-none"
-          />
-          <input
-            type="time"
-            name="time"
-            ngModel
-            required
-            class="px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold outline-none"
-          />
-        </div>
-
-        <button
-          type="submit"
-          [disabled]="!apptF.valid || !selectedPatientForBooking()"
-          class="w-full py-5 bg-blue-600 text-white rounded-[24px] font-black shadow-2xl hover:bg-blue-700 disabled:opacity-50 transition-all uppercase tracking-widest text-xs"
+        @if (selectedAppt()?.vitals) { @if(activeSidebarTab() === 'billing') {
+        <div
+          class="p-6 bg-white dark:bg-slate-900 rounded-[30px] border border-blue-100 animate-in fade-in zoom-in duration-200"
         >
-          Confirm Booking
-        </button>
-      </form>
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-black text-sm uppercase">Billing Summary</h3>
+            <span class="text-xs font-bold text-blue-600 underline cursor-pointer">Add Item</span>
+          </div>
+          <div class="space-y-3">
+            <div class="flex justify-between text-xs font-bold">
+              <span class="text-slate-400">Consultation Fee</span>
+              <span>$50.00</span>
+            </div>
+            <div class="pt-3 border-t font-black flex justify-between">
+              <span>Total Amount</span>
+              <span class="text-blue-600">$50.00</span>
+            </div>
+            <button
+              (click)="generateBill()"
+              class="w-full mt-4 py-3 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg"
+            >
+              Confirm & Print Bill
+            </button>
+          </div>
+        </div>
+        } @if (activeSidebarTab() === 'labs') {
+        <div
+          class="p-6 bg-white dark:bg-slate-900 rounded-[30px] border border-emerald-100 animate-in fade-in zoom-in duration-200"
+        >
+          <p class="text-center text-xs text-slate-400 font-bold">
+            Select required lab tests for this patient.
+          </p>
+        </div>
+        } }
+      </div>
     </div>
   </div>
   }

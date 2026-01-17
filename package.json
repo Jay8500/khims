@@ -7,7 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "jay": "ng build && git add . && git commit -m \"Latest spread app update\" && git push origin main"
+    "jay": "ng build && git add . && git commit -m \"Latest hims  update\" && git push origin main"
   },
   "prettier": {
     "printWidth": 100,

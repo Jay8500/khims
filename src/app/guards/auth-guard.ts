@@ -4,17 +4,12 @@ import { Supabase } from '../services/supabase';
 export const authGuard: CanActivateFn = async (route, state) => {
   const supabase = inject(Supabase);
   const router = inject(Router);
+  const { data } = await supabase.client.auth.getSession();
 
-  // 1. Ask Supabase for the current session
-  const {
-    data: { session },
-  } = await supabase.client.auth.getSession();
-
-  // 2. If session exists, let them pass
-  if (session) {
-    return true;
+  if (data.session) {
+    return true; // Let them in, the Shell will handle the specific redirect
   }
 
-  // 3. If no session, redirect to login page
-  return router.parseUrl('/login');
+  router.navigate(['/login']);
+  return false;
 };
