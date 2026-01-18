@@ -5,7 +5,6 @@ import { Supabase } from '../../services/supabase';
 import { Branding } from '../../services/branding';
 import { Validator } from '../../shared/validator/validator';
 import { Toaster } from '../../services/toaster';
-import { Title } from '@angular/platform-browser';
 @Component({
   selector: 'app-login',
   imports: [FormsModule, Validator],
@@ -23,29 +22,11 @@ export class Login {
   private router = inject(Router);
   isSubmitted = signal(false);
   public tenantInfo: any = signal<any>({});
-  private titleService = inject(Title);
   constructor(private toaster: Toaster) {
     this.tenantInfo.set(this.supabase.getTenantInfo());
-    console.log('sd', this.tenantInfo());
-    this.updateBrowserBranding(this.tenantInfo().name, this.tenantInfo().logo_url);
   }
 
-  private updateBrowserBranding(name: string, logoUrl: string) {
-    // 1. Update Page Title
-    this.titleService.setTitle(`${name} - Portal`);
 
-    // 2. Update Favicon
-    const link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
-    if (link) {
-      link.href = logoUrl;
-    } else {
-      // If no favicon link exists, create one
-      const newLink = document.createElement('link');
-      newLink.rel = 'icon';
-      newLink.href = logoUrl;
-      document.head.appendChild(newLink);
-    }
-  }
 
   async handleLogin(form: NgForm) {
     this.isSubmitted.set(true);
