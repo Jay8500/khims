@@ -1,18 +1,28 @@
 <div class="p-6 space-y-6 relative min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors">
-  
-  <div class="flex flex-wrap justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm">
+  <div
+    class="flex flex-wrap justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm"
+  >
     <div>
-      <h1 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Pharmacy Inventory</h1>
+      <h1 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
+        Pharmacy Inventory
+      </h1>
       <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">
-        Items: <span class="text-slate-900 dark:text-slate-200 font-bold">{{ inventory().length }}</span> | 
-        Low Stock: <span class="text-red-500 font-bold">{{ inventory().slice(0, 5).length }}</span>
+        Items:
+        <span class="text-slate-900 dark:text-slate-200 font-bold">{{ inventory().length }}</span> |
+        Low Stock:<span class="text-red-500 font-bold">{{ lowStockCount() }}</span>
       </p>
     </div>
-    
+
     <div class="flex gap-3 mt-4 lg:mt-0">
       <div class="relative">
         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="3" stroke-linecap="round"/></svg>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              stroke-width="3"
+              stroke-linecap="round"
+            />
+          </svg>
         </span>
         <input
           type="text"
@@ -32,105 +42,260 @@
 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
     @for (item of filteredInventory(); track item.id) {
-    <div class="bg-white dark:bg-slate-900 p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm group hover:border-blue-400 dark:hover:border-blue-500 transition-all relative overflow-hidden">
-      
-      <div class="flex justify-between items-start mb-4">
-        <span class="text-[9px] font-black px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 uppercase tracking-widest border border-blue-100 dark:border-blue-900/30">
-          {{ item.category }}
-        </span>
-        <button
-          (click)="deleteItem(item.id)"
-          class="opacity-0 group-hover:opacity-100 p-2 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl transition-all hover:scale-110"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-      </div>
-
-      <h3 class="font-black text-slate-800 dark:text-white text-lg mb-1 truncate">{{ item.name }}</h3>
-
-      <div class="flex items-baseline gap-2 mb-6">
-        <span
-          [class]="item.stock < 50 ? 'text-red-600 dark:text-red-500 animate-pulse' : 'text-slate-900 dark:text-blue-400'"
-          class="text-3xl font-black tracking-tighter"
-        >
-          {{ item.stock }}
-        </span>
-        <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">{{ item.unit }}</span>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4 pt-5 border-t border-slate-50 dark:border-slate-800">
-        <div>
-          <p class="text-[9px] text-slate-400 dark:text-slate-500 font-black uppercase mb-1">Unit Price</p>
-          <p class="text-sm font-black text-emerald-600 dark:text-emerald-400">₹{{ item.price }}</p>
+      <div
+        class="bg-white dark:bg-slate-900 p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm group hover:border-blue-400 dark:hover:border-blue-500 transition-all relative overflow-hidden"
+      >
+        <div class="flex justify-between items-start mb-4">
+          <span
+            class="text-[9px] font-black px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 uppercase tracking-widest border border-blue-100 dark:border-blue-900/30"
+          >
+            {{ item.category }}
+          </span>
+          <button
+            (click)="deleteItem(item.id)"
+            class="opacity-0 group-hover:opacity-100 p-2 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl transition-all hover:scale-110"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
         </div>
-        <div class="text-right">
-          <p class="text-[9px] text-slate-400 dark:text-slate-500 font-black uppercase mb-1">Expiry</p>
-          <p class="text-sm font-bold text-slate-700 dark:text-slate-300 italic">{{ item.expiry }}</p>
+
+        <h3 class="font-black text-slate-800 dark:text-white text-lg mb-1 truncate">
+          {{ item.name }}
+        </h3>
+
+        <div class="flex items-baseline gap-2 mb-6">
+          <span
+            [class]="
+              item.stock < 50
+                ? 'text-red-600 dark:text-red-500 animate-pulse'
+                : 'text-slate-900 dark:text-blue-400'
+            "
+            class="text-3xl font-black tracking-tighter"
+          >
+            {{ item.stock }}
+          </span>
+          <span
+            class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]"
+            >{{ item.unit }}</span
+          >
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 pt-5 border-t border-slate-50 dark:border-slate-800">
+          <div>
+            <p class="text-[9px] text-slate-400 dark:text-slate-500 font-black uppercase mb-1">
+              Unit Price
+            </p>
+            <p class="text-sm font-black text-emerald-600 dark:text-emerald-400">
+              ₹{{ item.price }}
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="text-[9px] text-slate-400 dark:text-slate-500 font-black uppercase mb-1">
+              Expiry
+            </p>
+            <p class="text-sm font-bold text-slate-700 dark:text-slate-300 italic">
+              {{ item.expiry }}
+            </p>
+          </div>
         </div>
       </div>
-    </div>
     }
   </div>
 
   @if (showAddStock()) {
-  <div class="fixed inset-0 z-[150] flex justify-end">
-    <div class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md" (click)="showAddStock.set(false)"></div>
+    <div class="fixed inset-0 z-[150] flex justify-end">
+      <div
+        class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md"
+        (click)="showAddStock.set(false)"
+      ></div>
 
-    <div class="relative w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl p-10 flex flex-col border-l dark:border-slate-800 animate-in slide-in-from-right duration-300">
-      <div class="mb-10">
-        <h2 class="text-3xl font-black text-slate-800 dark:text-white italic tracking-tighter">New Stock Entry</h2>
-        <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] mt-1">Warehouse Registration</p>
+      <div
+        class="relative w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl p-10 flex flex-col border-l dark:border-slate-800 animate-in slide-in-from-right duration-300"
+      >
+        <div class="mb-5">
+          <h2 class="text-3xl font-black text-slate-800 dark:text-white italic tracking-tighter">
+            New Stock Entry
+          </h2>
+        </div>
+
+        <form
+          #stockF="ngForm"
+          (ngSubmit)="saveNewStock(stockF.value,stockF)"
+          class="space-y-6 flex-1 overflow-y-auto pr-2"
+        >
+          <div>
+            <label
+              class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2"
+              >Medicine Name</label
+            >
+            <input
+              type="text"
+              name="name"
+              ngModel
+              required
+              placeholder="e.g. Paracetamol 500mg"
+              class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none focus:ring-4 focus:ring-blue-500/10 transition-all"
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2"
+                >Category</label
+              >
+              <select
+                name="category"
+                ngModel="Tablet"
+                class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none"
+              >
+                <option value="Tablet">Tablet</option>
+                <option value="Syrup">Syrup</option>
+                <option value="Injection">Injection</option>
+                <option value="Ointment">Ointment</option>
+              </select>
+            </div>
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2"
+                >Unit</label
+              >
+              <input
+                type="text"
+                name="unit"
+                ngModel="Tabs"
+                placeholder="Tabs/Vial"
+                class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2"
+                >Quantity</label
+              >
+              <input
+                type="number"
+                name="stock"
+                ngModel
+                required
+                class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2"
+                >Price (₹)</label
+              >
+              <input
+                type="number"
+                name="price"
+                ngModel
+                required
+                class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none"
+              />
+            </div>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"
+              >Stock Prescription / Notes</label
+            >
+            <textarea
+              name="prescription_notes"
+              ngModel
+              class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none"
+            ></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"
+                >Order Date</label
+              >
+              <input
+                type="date"
+                name="order_date"
+                ngModel
+                class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 font-bold outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase mb-2"
+                >Received Date</label
+              >
+              <input
+                type="date"
+                name="received_date"
+                ngModel
+                class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 font-bold outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <p class="text-[10px] font-black text-blue-500 uppercase">Vendor Information</p>
+            <div class="grid grid-cols-2 gap-4">
+              <input
+                type="text"
+                name="vendor_name"
+                ngModel
+                placeholder="Vendor Name"
+                class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 font-bold outline-none"
+              />
+              <input
+                type="text"
+                name="vendor_mobile"
+                ngModel
+                placeholder="Vendor Contact"
+                class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 font-bold outline-none"
+              />
+            </div>
+            <input
+              type="text"
+              name="gst_no"
+              ngModel
+              placeholder="GST Number"
+              class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 font-bold outline-none"
+            />
+            <textarea
+              name="vendor_address"
+              ngModel
+              placeholder="Vendor Address"
+              class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 font-bold outline-none"
+            ></textarea>
+          </div>
+          <div>
+            <label
+              class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2"
+              >Expiry Date</label
+            >
+            <input
+              type="date"
+              name="expiry"
+              ngModel
+              required
+              class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none"
+            />
+          </div>
+
+          <button
+            type="submit"
+            [disabled]="!stockF.valid"
+            class="w-full py-5 bg-slate-900 dark:bg-blue-600 text-white rounded-3xl font-black shadow-2xl hover:bg-blue-600 transition-all disabled:opacity-30 mt-4 uppercase text-xs tracking-[0.2em]"
+          >
+            Register Stock Item
+          </button>
+        </form>
       </div>
-
-      <form #stockF="ngForm" (ngSubmit)="saveNewStock(stockF.value)" class="space-y-6 flex-1 overflow-y-auto pr-2">
-        <div>
-          <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2">Medicine Name</label>
-          <input type="text" name="name" ngModel required placeholder="e.g. Paracetamol 500mg"
-            class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none focus:ring-4 focus:ring-blue-500/10 transition-all" />
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2">Category</label>
-            <select name="category" ngModel="Tablet" class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none">
-              <option value="Tablet">Tablet</option>
-              <option value="Syrup">Syrup</option>
-              <option value="Injection">Injection</option>
-              <option value="Ointment">Ointment</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2">Unit</label>
-            <input type="text" name="unit" ngModel="Tabs" placeholder="Tabs/Vial"
-              class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none" />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2">Quantity</label>
-            <input type="number" name="stock" ngModel required 
-              class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none" />
-          </div>
-          <div>
-            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2">Price (₹)</label>
-            <input type="number" name="price" ngModel required 
-              class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none" />
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase mb-2">Expiry Date</label>
-          <input type="date" name="expiry" ngModel required 
-            class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none" />
-        </div>
-
-        <button type="submit" [disabled]="!stockF.valid"
-          class="w-full py-5 bg-slate-900 dark:bg-blue-600 text-white rounded-3xl font-black shadow-2xl hover:bg-blue-600 transition-all disabled:opacity-30 mt-4 uppercase text-xs tracking-[0.2em]">
-          Register Stock Item
-        </button>
-      </form>
     </div>
-  </div>
   }
 </div>

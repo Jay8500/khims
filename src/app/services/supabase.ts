@@ -18,6 +18,10 @@ export class Supabase {
   public currentTenant = signal<any>(null); // Stores Name, Logo, Brand Color
   public currentHospitalId = signal<string | null>(null); // Stores the UUID
   // -------------------------
+  private tenantReadyResolve: any;
+  public tenantReady = new Promise((resolve) => {
+    this.tenantReadyResolve = resolve;
+  });
 
   constructor() {
     // Use dot notation (no brackets, no quotes)
@@ -62,6 +66,7 @@ export class Supabase {
       this.currentTenant.set(data.data);
       localStorage.setItem('tenant_info', JSON.stringify(this.currentTenant()));
       this.currentHospitalId.set(data.data.id);
+      this.tenantReadyResolve();
       // console.log(`Initialized Tenant: ${data.data.name}`);
       this.refreshMenu();
     }
@@ -426,5 +431,40 @@ export class Supabase {
       return { statusCode: 400, message: error.message, data: null };
     }
     return { statusCode: 200, message: 'Status updated', data: data };
+  }
+
+  // Add to your Supabase class in supabase.ts
+
+  async getInventory(): Promise<ApiResponse<any[]>> {
+    const h_id = this.currentHospitalId();
+    if (!h_id) return { statusCode: 404, message: 'Hospital context missing', data: [] };
+
+    const { data, error } = await this.supabase
+      .from('pharmacy_inventory')
+      .select('*')
+      .eq('hospital_id', h_id)
+      .order('name', { ascending: true });
+
+    if (error) return { statusCode: 500, message: error.message, data: [] };
+    return { statusCode: 200, message: 'Success', data: data };
+  }
+
+  async saveInventoryItem(item: any): Promise<ApiResponse<any>> {
+    const h_id = this.currentHospitalId();
+    const { data, error } = await this.supabase.rpc('upsert_inventory_item', {
+      p_item: item,
+      p_h_id: h_id,
+    });
+
+    if (error) return { statusCode: 400, message: error.message, data: null };
+    return data;
+  }
+
+  async deleteInventoryItem(id: string): Promise<ApiResponse<null>> {
+    const { error } = await this.supabase.from('pharmacy_inventory').delete().eq('id', id);
+
+    return error
+      ? { statusCode: 400, message: error.message, data: null }
+      : { statusCode: 200, message: 'Item removed', data: null };
   }
 }

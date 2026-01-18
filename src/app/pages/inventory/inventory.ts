@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal, computed } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
+import { FormsModule, NgForm } from '@angular/forms';
+import { Supabase } from '../../services/supabase';
 
 interface StockItem {
   id: number;
@@ -18,54 +19,33 @@ interface StockItem {
   templateUrl: './inventory.html',
   styleUrl: './inventory.css',
 })
-export class Inventory {
+export class Inventory implements OnInit {
+  private supabase = inject(Supabase);
   // Master Inventory Signal
-  inventory = signal<StockItem[]>([
-    {
-      id: 1,
-      name: 'Paracetamol 500mg',
-      category: 'Analgesic',
-      stock: 1250,
-      unit: 'Tabs',
-      price: 5,
-      expiry: '2026-12-10',
-    },
-    {
-      id: 2,
-      name: 'Amoxicillin 250mg',
-      category: 'Antibiotic',
-      stock: 45,
-      unit: 'Tabs',
-      price: 15,
-      expiry: '2025-08-22',
-    },
-    {
-      id: 3,
-      name: 'Cetrizen 10mg',
-      category: 'Antihistamine',
-      stock: 300,
-      unit: 'Tabs',
-      price: 8,
-      expiry: '2026-01-15',
-    },
-    {
-      id: 4,
-      name: 'Insulin Glargine',
-      category: 'Diabetes',
-      stock: 12,
-      unit: 'Vials',
-      price: 450,
-      expiry: '2025-05-30',
-    },
-  ]);
+  inventory = signal<StockItem[]>([]);
   showAddStock = signal(false);
-
   searchTerm = signal('');
 
-  // Computed signal for real-time search filtering
+  constructor() {}
+
+  async ngOnInit() {
+    await this.supabase.tenantReady;
+    await this.loadInventory();
+  }
+  async loadInventory() {
+    try {
+      const res = await this.supabase.getInventory();
+      if (res.statusCode === 200) {
+        this.inventory.set(res.data);
+      }
+    } catch (e) {
+      console.log('e ', e);
+    }
+  }
+
   filteredInventory = computed(() => {
     return this.inventory().filter((item) =>
-      item.name.toLowerCase().includes(this.searchTerm().toLowerCase())
+      item.name.toLowerCase().includes(this.searchTerm().toLowerCase()),
     );
   });
 
@@ -74,25 +54,25 @@ export class Inventory {
     this.inventory.update((current) => [...current, newItem]);
   }
 
-  saveNewStock(formValue: any) {
-    const newItem: StockItem = {
-      id: Date.now(),
-      name: formValue.name,
-      category: formValue.category,
-      stock: Number(formValue.stock),
-      unit: formValue.unit,
-      price: Number(formValue.price),
-      expiry: formValue.expiry,
-    };
+  async saveNewStock(formValue: any, form: NgForm) {
+    // Include the new fields in the payload
+    const res = await this.supabase.saveInventoryItem(formValue);
 
-    // Update the inventory list
-    this.inventory.update((items) => [newItem, ...items]);
-
-    // Close the drawer
-    this.showAddStock.set(false);
+    if (res.statusCode === 200) {
+      this.inventory.update((prev) => [res.data, ...prev]);
+      this.showAddStock.set(false);
+      form.resetForm();
+    }
   }
 
-  deleteItem(id: number) {
-    this.inventory.update((items) => items.filter((i) => i.id !== id));
+  async deleteItem(id: any) {
+    const res = await this.supabase.deleteInventoryItem(id);
+    if (res.statusCode === 200) {
+      this.inventory.update((items) => items.filter((i: any) => i.id !== id));
+    }
   }
+
+  lowStockCount = computed(() => {
+    return this.inventory().filter((item) => item.stock < 50).length;
+  });
 }
