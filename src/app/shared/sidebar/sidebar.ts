@@ -58,6 +58,10 @@ export class Sidebar implements OnInit {
       '<path d="M6 18h8m-8-3h5m1-9h1m-1 4h1m-4-7v14a2 2 0 002 2h0a2 2 0 002-2V3m-4 0h4" />', // Lab
     'credit-card':
       '<path d="M1 10h22M1 15h22M1 20h22M1 5h22a2 2 0 012 2v12a2 2 0 01-2 2H1a2 2 0 01-2-2V7a2 2 0 012-2z" />', // Billing
+    'test-tube':
+      '<path d="M10 2v7.31a3 3 0 010 5.38V20a2 2 0 002 2h0a2 2 0 002-2v-5.31a3 3 0 010-5.38V2m-4 0h4m-4 9h4m-4 3h4" />',
+    'microscope-alt':
+      '<path d="M6 18h8m-8-3h5m1-9h1m-1 4h1m-4-7v14a2 2 0 002 2h0a2 2 0 002-2V3m-4 0h4" />',
   };
   constructor(private toaster: Toaster) {}
   async ngOnInit() {

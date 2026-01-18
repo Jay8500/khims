@@ -93,7 +93,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/admincalendar/admincalendar').then((m) => m.Admincalendar),
       },
-       { path: '**', redirectTo: 'login' },
+      {
+        path: 'tests',
+        loadComponent: () => import('./pages/tests/tests').then((m) => m.Tests),
+      },
+      { path: '**', redirectTo: 'login' },
     ],
   },
   // 4. Wildcard Route (404 Page)

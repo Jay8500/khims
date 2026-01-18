@@ -41,7 +41,7 @@ export class Appointments implements OnInit {
     this.hospitalId.set(this.supabase.currentHospitalId());
 
     // 2. Now that we definitely have the ID, load everything
-    await Promise.all([this.loadAppointments(), this.loadDoctors()]);
+    await Promise.all([this.loadAppointments(), this.loadDoctors(), this.loadLabTests()]);
   }
 
   async loadDoctors() {
@@ -57,9 +57,16 @@ export class Appointments implements OnInit {
   }
 
   async loadAppointments() {
-    const res = await this.supabase.getAppointmentsByDate(this.selectedDate());
-    if (res.statusCode === 200) {
-      this.appointments.set(res.data);
+    try {
+      const res = await this.supabase.getAppointmentsByDate(this.selectedDate());
+      // Ensure data is always an array, even if the DB returns null
+      if (res && res.statusCode === 200) {
+        this.appointments.set(res.data || []);
+      } else {
+        this.appointments.set([]);
+      }
+    } catch (err) {
+      this.appointments.set([]);
     }
   }
 
@@ -73,6 +80,12 @@ export class Appointments implements OnInit {
     }
   }
 
+  async loadLabTests() {
+    const res = await this.supabase.getLabTests();
+    if (res.statusCode === 200) {
+      this.labTestMaster.set(res.data || []);
+    }
+  }
   selectPatient(patient: any) {
     this.selectedPatientForBooking.set(patient);
     this.patientSearchResults.set([]);
@@ -112,35 +125,67 @@ export class Appointments implements OnInit {
   activeSidebarTab = signal<'summary' | 'billing' | 'labs'>('summary');
 
   openDetailedSidebar(appt: any) {
-    const latestAppt = this.appointments().find((a) => a.id === appt.id);
-    console.log('Opening Sidebar for:', latestAppt); // <--- Debug here!
-    this.selectedAppt.set(latestAppt || appt);
+    try {
+      const latestAppt = this.appointments().find((a) => a.id === appt.id);
+      const rawLab = latestAppt?.labStatus?.[0] || null;
+
+      if (rawLab) {
+        const resultsData = rawLab.lab_results?.[0]?.results_data || {};
+        const resultValues = Object.values(resultsData); // ["12", "45"]
+        const processedLab = {
+          status: rawLab.status,
+          id: rawLab.id,
+          // 2. ప్రతి ఐటమ్ కి రిజల్ట్ ని అటాచ్ చేయండి
+          lab_order_items: rawLab.lab_order_items?.map((item: any, index: number) => ({
+            ...item,
+            displayResult: resultValues[index] || 'Pending',
+          })),
+          results: resultsData,
+        };
+        // 3. ఇక్కడ సిగ్నల్ అప్‌డేట్ చేయండి
+        this.selectedAppt.set({ ...latestAppt, processedLab });
+      } else {
+        this.selectedAppt.set({ ...latestAppt, processedLab: null });
+      }
+
+      // Sidebar ఓపెన్ చేసినప్పుడు డీఫాల్ట్‌గా 'labs' లేదా 'billing' సెట్ చేయవచ్చు
+    } catch (e) {
+    }
+    this.activeSidebarTab.set('labs');
     this.showDetailedSidebar.set(true);
   }
 
   async generateBill() {
     const appt = this.selectedAppt();
-    if (!appt) return;
+    const h_id = this.supabase.currentHospitalId();
+    if (!appt || !h_id) return;
 
-    const billingPayload = {
-      appointment_id: appt.id,
-      patient_id: appt.patient_id,
-      hospital_id: this.supabase.currentHospitalId(),
-      total_amount: 50.0, // For now, a flat consultation fee
-      payment_status: 'Paid',
-    };
+    // Set loading state if you have one
+    try {
+      const billingPayload = {
+        appointment_id: appt.id,
+        patient_id: appt.patient_id,
+        hospital_id: h_id,
+        total_amount: 50.0,
+        payment_status: 'Paid',
+        billed_by: this.supabase.currentUser()?.id, // Track who did the billing
+      };
 
-    // 1. Save Billing Record
-    const billRes = await this.supabase.saveBilling(billingPayload);
+      const billRes = await this.supabase.saveBilling(billingPayload);
 
-    if (billRes.statusCode === 200) {
-      // 2. Update Appointment Status to 'Completed'
-      await this.supabase.updateAppointmentStatus(appt.id, 'Completed');
+      if (billRes.statusCode === 200) {
+        // Update Appointment Status
+        await this.supabase.updateAppointmentStatus(appt.id, 'Completed');
 
-      // 3. UI Cleanup
-      this.showDetailedSidebar.set(false);
-      await this.loadAppointments(); // Refresh the grid to see the status change
-      alert('Bill Generated Successfully!');
+        // Update Local State without a full reload for "Fast" feel
+        this.appointments.update((list) =>
+          list.map((a) => (a.id === appt.id ? { ...a, status: 'Completed' } : a)),
+        );
+
+        this.showDetailedSidebar.set(false);
+        // Optional: Trigger a success toast instead of a blocking alert
+      }
+    } catch (err) {
     }
   }
   hospitalId = signal<string | null>(null);
@@ -162,19 +207,60 @@ export class Appointments implements OnInit {
     if (response.statusCode === 200) {
       // FIX: Match the variable name and ensure it's an object
       const updatedVitals = Array.isArray(response.data) ? response.data[0] : response.data;
-
-      // Update the main list signal
+      // 1. Update the list
       this.appointments.update((all) =>
-        all.map((a) => (a.id === currentAppt.id ? { ...a, vitals: updatedVitals } : a))
+        all.map((a) => (a.id === currentAppt.id ? { ...a, vitals: updatedVitals } : a)),
       );
 
-      // Force update the selectedAppt signal
+      // 2. Set the selected appt with new vitals
       this.selectedAppt.set({ ...currentAppt, vitals: updatedVitals });
 
+      // 3. Close Triage and open Details
       this.showVitalsSidebar.set(false);
 
-      // Refresh detailed sidebar
-      this.openDetailedSidebar(this.selectedAppt());
+      // Add a tiny delay so the "slide out" finishes before the next "slide in"
+      setTimeout(() => {
+        this.activeSidebarTab.set('summary'); // Reset to summary tab
+        this.showDetailedSidebar.set(true);
+      }, 100);
     }
+  }
+
+  // Add a signal to track selected tests in your class
+  selectedTests = signal<string[]>([]);
+
+  async submitLabOrders() {
+    const appt = this.selectedAppt();
+    const testIds = this.selectedTests(); // Array of UUIDs
+
+    if (testIds.length === 0) return alert('Select at least one test');
+
+    try {
+      // STEP 1: Create the Main Lab Order
+      const orderPayload = {
+        patient_id: appt.patient_id,
+        appointment_id: appt.id,
+        status: 'Pending',
+        priority: 'Routine',
+        created_by: this.supabase.currentUser()?.id,
+      };
+      // Note: Calling a custom supabase method that handles the logic
+      const res = await this.supabase.createFullLabOrder(orderPayload, testIds);
+
+      if (res.statusCode === 200) {
+        this.selectedTests.set([]);
+        this.activeSidebarTab.set('summary');
+        alert('Lab order created successfully!');
+      }
+    } catch (err) {
+    }
+  }
+
+  labTestMaster = signal<any[]>([]);
+
+  toggleTest(testId: string) {
+    this.selectedTests.update((tests) =>
+      tests.includes(testId) ? tests.filter((id) => id !== testId) : [...tests, testId],
+    );
   }
 }

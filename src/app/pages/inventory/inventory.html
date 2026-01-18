@@ -170,8 +170,8 @@
               <input
                 type="text"
                 name="unit"
-                ngModel="Tabs"
-                placeholder="Tabs/Vial"
+                ngModel
+                placeholder="Tabs/Vital"
                 class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none"
               />
             </div>
@@ -304,6 +304,7 @@
               name="expiry"
               ngModel
               required
+              [min]="minExpiryDate"
               class="w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold outline-none"
             />
           </div>

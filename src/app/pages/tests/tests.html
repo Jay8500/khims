@@ -1,0 +1,245 @@
+<div class="p-6 space-y-6 relative min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors">
+  <div
+    class="flex flex-wrap justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-[32px] border border-slate-100 dark:border-slate-800 shadow-sm"
+  >
+    <div>
+      <h1 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight">Test Master</h1>
+      <p class="text-sm text-slate-500 font-medium">
+        Defined Services: <span class="text-indigo-600 font-bold">{{ testList().length }}</span>
+      </p>
+    </div>
+
+    <div class="flex gap-3 mt-4 lg:mt-0">
+      <div class="relative flex items-center">
+        <input
+          type="text"
+          [value]="searchTerm()"
+          (input)="searchTerm.set($any($event.target).value)"
+          placeholder="Search tests..."
+          class="..."
+        />
+        @if (searchTerm()) {
+          <button (click)="searchTerm.set('')" class="absolute right-4 text-slate-400">✕</button>
+        }
+      </div>
+      <button
+        (click)="showForm.set(true)"
+        class="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 dark:shadow-none"
+      >
+        + Create New Test
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    @for (test of filteredTests(); track test.id) {
+      <div
+        (click)="selectedTest.set(test)"
+        class="bg-white dark:bg-slate-900 p-6 rounded-[35px] border border-slate-100 dark:border-slate-800 shadow-sm group hover:border-indigo-400 cursor-pointer transition-all relative overflow-hidden"
+      >
+        <div class="flex justify-between items-start mb-4">
+          <span
+            class="text-[9px] font-black px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 uppercase tracking-widest border border-indigo-100"
+          >
+            {{ test.test_code || 'No Code' }}
+          </span>
+          <span
+            [class]="test.status ? 'text-emerald-500' : 'text-slate-300'"
+            class="text-[10px] font-black italic"
+          >
+            {{ test.status ? '● Active' : '○ Inactive' }}
+          </span>
+        </div>
+
+        <h3 class="font-black text-slate-800 dark:text-white text-lg mb-1 truncate">
+          {{ test.test_name }}
+        </h3>
+
+        <div class="flex items-baseline gap-2 mb-6">
+          <span class="text-2xl font-black tracking-tighter text-slate-900 dark:text-indigo-400"
+            >₹{{ test.price }}</span
+          >
+          <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest"
+            >Base Rate</span
+          >
+        </div>
+
+        <div
+          class="pt-4 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center"
+        >
+          <p class="text-[10px] text-slate-400 font-black uppercase">
+            {{ test.lab_test_parameters?.length || 0 }} Parameters
+          </p>
+          <span
+            class="text-indigo-600 text-xs font-bold group-hover:translate-x-1 transition-transform"
+            >View Details →</span
+          >
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (selectedTest()) {
+    <div class="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      <div
+        class="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+        (click)="selectedTest.set(null)"
+      ></div>
+      <div
+        class="relative bg-white dark:bg-slate-900 w-full max-w-xl rounded-[40px] shadow-2xl p-8 animate-in zoom-in duration-200"
+      >
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <h2 class="text-2xl font-black text-slate-800 dark:text-white">
+              {{ selectedTest()?.test_name }}
+            </h2>
+            <p class="text-indigo-600 font-bold uppercase text-xs tracking-widest">
+              {{ selectedTest()?.test_code }}
+            </p>
+          </div>
+          <button (click)="selectedTest.set(null)" class="p-2 bg-slate-100 rounded-full">✕</button>
+        </div>
+
+        <div class="space-y-3">
+          <p class="text-[10px] font-black text-slate-400 uppercase">Parameter Breakdown</p>
+          <div
+            class="bg-slate-50 dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-700"
+          >
+            <table class="w-full text-left border-collapse">
+              <thead
+                class="bg-slate-100 dark:bg-slate-700 text-[10px] font-black uppercase text-slate-500"
+              >
+                <tr>
+                  <th class="p-4">Name</th>
+                  <th class="p-4 text-center">Unit</th>
+                  <th class="p-4 text-right">Normal Range</th>
+                </tr>
+              </thead>
+              <tbody class="text-sm font-bold text-slate-700 dark:text-slate-300">
+                @for (p of selectedTest()?.lab_test_parameters; track p.id) {
+                  <tr class="border-t border-slate-100 dark:border-slate-700">
+                    <td class="p-4">{{ p.parameter_name }}</td>
+                    <td class="p-4 text-center text-indigo-500">{{ p.unit || '-' }}</td>
+                    <td class="p-4 text-right italic">{{ p.normal_range || 'N/A' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showForm()) {
+    <div class="fixed inset-0 z-[150] flex justify-end">
+      <div
+        class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+        (click)="showForm.set(false)"
+      ></div>
+      <div
+        class="relative w-full max-w-2xl bg-white dark:bg-slate-900 h-full p-10 flex flex-col shadow-2xl animate-in slide-in-from-right duration-300"
+      >
+        <h2 class="text-3xl font-black italic tracking-tighter mb-8">Setup Master Test</h2>
+
+        <form
+          #f="ngForm"
+          (ngSubmit)="submitTest(f.value)"
+          class="space-y-6 flex-1 overflow-y-auto pr-4"
+        >
+          <div class="grid grid-cols-2 gap-4">
+            <div class="col-span-2">
+              <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block"
+                >Test Name</label
+              >
+              <input
+                name="test_name"
+                ngModel
+                required
+                class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 font-bold border-none outline-none focus:ring-2 ring-indigo-500/20"
+              />
+            </div>
+            <div>
+              <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block"
+                >Test Code</label
+              >
+              <input
+                name="test_code"
+                ngModel
+                class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 font-bold border-none"
+              />
+            </div>
+            <div>
+              <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block"
+                >Standard Price (₹)</label
+              >
+              <input
+                name="price"
+                ngModel
+                type="number"
+                class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 font-bold border-none"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-4 pt-6 border-t">
+            <div class="flex justify-between items-center">
+              <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest">
+                Parameters Configuration
+              </h3>
+              <button
+                type="button"
+                (click)="addParamRow()"
+                class="text-[10px] bg-slate-900 text-white px-4 py-2 rounded-full font-black uppercase"
+              >
+                + Add Row
+              </button>
+            </div>
+
+            @for (row of parameters(); track $index) {
+              <div
+                class="grid grid-cols-3 gap-2 p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl group relative"
+              >
+                <input
+                  [(ngModel)]="row.parameter_name"
+                  [name]="'pn' + $index"
+                  placeholder="e.g. Hemoglobin"
+                  class="bg-transparent text-sm font-bold border-b border-slate-200 outline-none p-1"
+                />
+                <input
+                  [(ngModel)]="row.unit"
+                  [name]="'u' + $index"
+                  placeholder="Unit (g/dL)"
+                  class="bg-transparent text-sm font-bold border-b border-slate-200 outline-none p-1 text-center"
+                />
+                <div class="flex items-center gap-2">
+                  <input
+                    [(ngModel)]="row.normal_range"
+                    [name]="'r' + $index"
+                    placeholder="Range (12-16)"
+                    class="bg-transparent text-sm font-bold border-b border-slate-200 outline-none p-1 w-full"
+                  />
+                  <button
+                    type="button"
+                    (click)="removeParamRow($index)"
+                    class="text-red-400 font-bold px-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+
+          <button
+            type="submit"
+            [disabled]="!f.valid"
+            class="w-full py-5 bg-indigo-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-xl disabled:opacity-30 mt-8"
+          >
+            Save Test to Master
+          </button>
+        </form>
+      </div>
+    </div>
+  }
+</div>

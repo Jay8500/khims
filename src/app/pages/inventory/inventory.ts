@@ -75,4 +75,8 @@ export class Inventory implements OnInit {
   lowStockCount = computed(() => {
     return this.inventory().filter((item) => item.stock < 50).length;
   });
+
+  get minExpiryDate() {
+  return new Date().toISOString().split('T')[0];
+}
 }

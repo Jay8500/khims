@@ -346,26 +346,25 @@ export class Supabase {
     return error ? { statusCode: 400, message: error.message } : { statusCode: 200 };
   }
 
-  async saveVitals(payload: any): Promise<ApiResponse<any>> {
-    const h_id = this.currentHospitalId();
-    if (!h_id) return { statusCode: 401, message: 'Hospital context missing', data: null };
-
-    // Use a unique name for the internal supabase result
-    const result = await this.supabase
+  async saveVitals(vitals: any): Promise<ApiResponse<any>> {
+    const { data, error } = await this.supabase
       .from('patient_vitals')
-      .insert({
-        ...payload,
-        hospital_id: h_id,
-        recorded_by: this.currentUser()?.id,
-      })
-      .select()
-      .single();
+      .insert([
+        {
+          appointment_id: vitals.appointment_id,
+          patient_id: vitals.patient_id,
+          hospital_id: this.currentHospitalId(), // Critical for multi-tenancy!
+          temp_c: vitals.temp_c,
+          blood_pressure: vitals.blood_pressure,
+          pulse_rate: vitals.pulse_rate,
+          sp_o2: vitals.sp_o2,
+          recorded_by: this.currentUser()?.id,
+        },
+      ])
+      .select();
 
-    if (result.error) {
-      return { statusCode: 400, message: result.error.message, data: null };
-    }
-
-    return { statusCode: 200, message: 'Success', data: result.data };
+    if (error) return { statusCode: 500, message: error.message, data: null };
+    return { statusCode: 200, message: 'Vitals Saved', data: data[0] };
   }
 
   async getAppointmentsByDate(date: string): Promise<ApiResponse<any[]>> {
@@ -382,13 +381,20 @@ export class Supabase {
       patient_id,
       patients (p_name, uhid),
       staff_profiles (id, full_name, departments (name)),
-      patient_vitals (temp_c, blood_pressure, pulse_rate, sp_o2)
+      patient_vitals (temp_c, blood_pressure, pulse_rate, sp_o2),
+     lab_orders (
+        id, 
+        status,
+        lab_order_items (
+          lab_test_master (test_name)
+        ),
+        lab_results (results_data, released_at)
+      )
     `,
       )
       .eq('hospital_id', h_id)
       .eq('appointment_date', date)
       .order('appointment_time', { ascending: true });
-
     if (error) return { statusCode: 500, message: error.message, data: [] };
     // This formatting step is CRITICAL
     const formatted = data.map((a: any) => ({
@@ -402,7 +408,8 @@ export class Supabase {
       specialty: a.staff_profiles?.departments?.name,
       status: a.status,
       // Supabase joins return arrays. We take the first vitals entry if it exists.
-      vitals: Object.keys(a.patient_vitals).length > 0 ? a.patient_vitals : null,
+      vitals: a.patient_vitals != null ? a.patient_vitals : null,
+      labStatus: a.lab_orders && a.lab_orders.length > 0 ? a.lab_orders : null,
     }));
     return { statusCode: 200, message: 'Success', data: formatted };
   }
@@ -466,5 +473,187 @@ export class Supabase {
     return error
       ? { statusCode: 400, message: error.message, data: null }
       : { statusCode: 200, message: 'Item removed', data: null };
+  }
+
+  /**
+   * 5. DIAGNOSTIC TEST MASTER METHODS
+   */
+
+  async getLabTests(): Promise<ApiResponse<any[]>> {
+    let h_id = this.currentHospitalId();
+
+    // Ensure tenant is loaded if called immediately
+    if (!h_id || h_id === 'null') {
+      await this.initializeTenant();
+      h_id = this.currentHospitalId();
+    }
+
+    if (!h_id) return { statusCode: 200, message: 'Waiting for context...', data: [] };
+
+    // Fetch tests with their parameters joined
+    const { data, error } = await this.supabase
+      .from('lab_test_master')
+      .select(
+        `
+        *,
+        lab_test_parameters (*)
+      `,
+      )
+      .eq('hospital_id', h_id)
+      .order('created_at', { ascending: false });
+
+    if (error) return { statusCode: 500, message: error.message, data: [] };
+
+    return {
+      statusCode: 200,
+      message: 'Tests fetched successfully',
+      data: data || [],
+    };
+  }
+
+  async saveLabTest(payload: any): Promise<ApiResponse<any>> {
+    const h_id = this.currentHospitalId();
+    if (!h_id) return { statusCode: 401, message: 'Hospital context missing', data: null };
+
+    // We pass the payload and the hospital_id to our fixed RPC
+    const { data, error } = await this.supabase.rpc('upsert_lab_test', {
+      p_test_data: payload,
+      p_hospital_id: h_id,
+    });
+
+    if (error) return { statusCode: 400, message: error.message, data: null };
+
+    // The RPC returns a JSONB object containing our custom ApiResponse structure
+    return data;
+  }
+
+  // Add these to your Supabase service class
+
+  // 1. Fetch the active lab queue for the current hospital
+  async getLabQueue() {
+    const h_id = this.currentHospitalId();
+
+    // Guard: h_id lekapoyina, leda string "null" unna call vellakudadhu
+    if (!h_id || h_id === 'null') {
+      console.warn('GetLabQueue blocked: Hospital ID is not initialized yet.');
+      return { data: [], error: null };
+    }
+
+    const { data, error } = await this.supabase
+      .from('lab_orders_view')
+      .select('*')
+      .eq('hospital_id', h_id)
+      .neq('status', 'Completed')
+      .order('created_at', { ascending: false });
+
+    return { data, error };
+  }
+  // 2. Fetch parameters for a specific order dynamically
+  async getOrderParameters(orderId: string) {
+    const { data, error } = await this.supabase.rpc('get_order_parameters', {
+      p_order_id: orderId,
+    });
+
+    return { data, error };
+  }
+
+  // 3. Save the results entered in the sidebar
+  async authorizeLabResults(payload: any) {
+    // payload should contain order_id, technician_id, and a JSONB of results
+    const { data, error } = await this.supabase.from('lab_results').insert([payload]);
+
+    if (!error) {
+      // Also update the order status to 'Completed'
+      await this.supabase
+        .from('lab_orders')
+        .update({ status: 'Completed' })
+        .eq('id', payload.order_id);
+    }
+
+    return { data, error };
+  }
+
+  async getAvailableTests() {
+    const h_id = this.currentHospitalId();
+    return await this.supabase
+      .from('lab_tests') // Assuming you have a table for master tests
+      .select('*')
+      .eq('hospital_id', h_id);
+  }
+
+  /**
+   * 6. LAB ORDERING METHODS
+   */
+
+  // Neatest way: Single insert with automatic context
+  async saveLabOrder(payload: any): Promise<ApiResponse<any>> {
+    const h_id = this.currentHospitalId();
+    const user = this.currentUser();
+
+    if (!h_id) return { statusCode: 401, message: 'Hospital context missing', data: null };
+
+    const finalPayload = {
+      ...payload,
+      hospital_id: h_id,
+      ordered_by: user?.id, // Automatically inject the logged-in doctor/nurse ID
+      status: 'Pending',
+      created_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await this.supabase
+      .from('lab_orders')
+      .insert([finalPayload])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Lab Order Error:', error);
+      return { statusCode: 400, message: error.message, data: null };
+    }
+
+    return {
+      statusCode: 200,
+      message: 'Lab orders created successfully',
+      data: data,
+    };
+  }
+
+  // Fast way: Using RPC for bulk processing or complex logic
+  async createLabOrder(payload: any): Promise<ApiResponse<any>> {
+    const { data, error } = await this.supabase.rpc('create_lab_order', {
+      p_data: {
+        ...payload,
+        hospital_id: this.currentHospitalId(),
+        ordered_by: this.currentUser()?.id,
+      },
+    });
+
+    if (error) return { statusCode: 400, message: error.message, data: null };
+    return { statusCode: 200, message: 'Order Processed', data: data };
+  }
+
+  async createFullLabOrder(orderData: any, testIds: string[]) {
+    // 1. Insert into lab_orders
+    orderData['hospital_id'] = this.currentHospitalId();
+    const { data: order, error: orderErr } = await this.supabase
+      .from('lab_orders')
+      .insert(orderData)
+      .select()
+      .single();
+
+    if (orderErr) return { statusCode: 400, error: orderErr };
+
+    // 2. Prepare child items for lab_order_items
+    const items = testIds.map((tId) => ({
+      order_id: order.id,
+      test_id: tId,
+    }));
+
+    // 3. Insert into lab_order_items
+    const { error: itemsErr } = await this.supabase.from('lab_order_items').insert(items);
+
+    if (itemsErr) return { statusCode: 400, error: itemsErr };
+
+    return { statusCode: 200, data: order };
   }
 }
