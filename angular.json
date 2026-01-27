@@ -45,6 +45,10 @@
               ],
               "outputHashing": "all"
             },
+            "desktop": {
+              "baseHref": "./",
+              "outputHashing": "none"
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,

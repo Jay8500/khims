@@ -1,0 +1,11 @@
+/* the-jay.css */
+.overflow-y-auto {
+  scroll-behavior: smooth;
+  display: flex;
+  flex-direction: column;
+}
+
+/* మెసేజ్ ల మధ్య గ్యాప్ కోసం */
+.overflow-y-auto > div {
+  flex-shrink: 0;
+}

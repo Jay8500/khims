@@ -209,7 +209,7 @@ export class LaboratoryComponent implements OnInit {
       theme: 'grid',
     });
 
-    doc.save(`${order.patientName}_${order.sampleId}.pdf`);
+    doc.save(`${order.patientName}_${order.uhid}.pdf`);
   }
 
   // Component class lopala add cheyandi

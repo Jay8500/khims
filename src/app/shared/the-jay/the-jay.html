@@ -1,55 +1,90 @@
-<button (click)="toggleChat()" 
-  class="fixed bottom-6 right-6 w-14 h-14 rounded-2xl bg-slate-900 shadow-2xl flex items-center justify-center z-[100] border border-white/20 transition-all hover:scale-110 active:scale-95 group">
+<button
+  (click)="toggleChat()"
+  class="fixed bottom-6 right-6 w-14 h-14 rounded-2xl bg-slate-900 shadow-2xl flex items-center justify-center z-[100] border border-white/20 transition-all hover:scale-110 active:scale-95 group"
+>
   <span class="text-white font-black italic text-xs group-hover:hidden">TJ</span>
   <span class="hidden group-hover:block text-white text-xs font-black">Talk</span>
 </button>
 
 @if (isOpen()) {
-<div class="fixed bottom-24 right-6 w-80 h-[480px] bg-white/70 backdrop-blur-2xl rounded-[32px] shadow-2xl z-[100] flex flex-col overflow-hidden border border-white animate-in slide-in-from-bottom-10">
-  
-  <div class="p-5 bg-slate-900 text-white flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-      <div>
-        <h4 class="text-[10px] font-black uppercase tracking-widest">TheJay AI</h4>
-        <p class="text-[8px] text-white/50 tracking-tighter italic">by Jaya Krishna Lakkoju</p>
-      </div>
-    </div>
-    <button (click)="toggleChat()" class="opacity-50 hover:opacity-100">✕</button>
-  </div>
-
-  <div class="flex-1 p-4 overflow-y-auto space-y-4">
-    @for (msg of messages(); track msg) {
-      <div [class]="msg.role === 'bot' ? 'flex justify-start' : 'flex justify-end'">
-        <div [class]="msg.role === 'bot' 
-          ? 'bg-white text-slate-700 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm' 
-          : 'bg-slate-900 text-white rounded-2xl rounded-tr-none shadow-md'"
-          class="p-3 max-w-[85%] text-[11px] font-bold leading-relaxed">
-          {{ msg.text }}
+  <div
+    class="fixed bottom-24 right-6 w-80 h-[480px] bg-white/70 backdrop-blur-2xl rounded-[32px] shadow-2xl z-[100] flex flex-col overflow-hidden border border-white animate-in slide-in-from-bottom-10"
+  >
+    <div class="p-5 bg-slate-900 text-white flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+        <div>
+          <h4 class="text-[10px] font-black uppercase tracking-widest">TheJay AI</h4>
+          <p class="text-[8px] text-white/50 tracking-tighter italic">by Jaya Krishna Lakkoju</p>
         </div>
       </div>
-    }
+      <button (click)="toggleChat()" class="opacity-50 hover:opacity-100">✕</button>
+    </div>
 
-    @if (currentStep() === 'home') {
-      <div class="flex flex-wrap gap-2 pt-2">
-        @for (s of services; track s) {
-          <button (click)="selectService(s)" 
-            class="px-3 py-1.5 rounded-full bg-white/50 border border-white text-slate-600 text-[9px] font-black hover:bg-slate-900 hover:text-white transition-all uppercase tracking-tighter">
-            + {{ s }}
-          </button>
-        }
-      </div>
-    }
-  </div>
+    <div #scrollFrame class="flex-1 p-4 overflow-y-auto space-y-4">
+      @for (msg of messages(); track msg) {
+        <div [class]="msg.role === 'bot' ? 'flex justify-start' : 'flex justify-end'">
+          <div
+            [class]="
+              msg.role === 'bot'
+                ? 'bg-white text-slate-700 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm'
+                : 'bg-slate-900 text-white rounded-2xl rounded-tr-none shadow-md'
+            "
+            class="p-3 max-w-[85%] text-[11px] font-bold leading-relaxed"
+          >
+            {{ msg.text }}
+          </div>
+        </div>
+      }
 
-  <div class="p-4 bg-white/30 border-t border-white/50">
-    <input 
-      [(ngModel)]="userInput"
-      (keyup.enter)="handleInput()"
-      type="text" 
-      placeholder="Type command or reply..." 
-      class="w-full bg-white/80 border border-white px-4 py-3 rounded-2xl text-[11px] font-bold outline-none focus:ring-4 focus:ring-slate-900/5 transition-all shadow-inner" 
-    />
+      @if (currentStep() === 'inv_cat') {
+        <div class="flex flex-wrap gap-2 pt-2 animate-in fade-in slide-in-from-left-2">
+          @for (cat of ['Tablet', 'Syrup', 'Injection', 'Ointment']; track cat) {
+            <button
+              (click)="handleQuickInput(cat)"
+              class="px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[9px] font-black hover:bg-slate-900 hover:text-white transition-all uppercase"
+            >
+              {{ cat }}
+            </button>
+          }
+        </div>
+      }
+
+      @if (currentStep() === 'inv_unit') {
+        <div class="flex flex-wrap gap-2 pt-2">
+          @for (unit of ['Tabs', 'Vials', 'Bottles', 'Boxes']; track unit) {
+            <button
+              (click)="handleQuickInput(unit)"
+              class="px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[9px] font-black hover:bg-slate-900 hover:text-white transition-all uppercase"
+            >
+              {{ unit }}
+            </button>
+          }
+        </div>
+      }
+      @if (currentStep() === 'home') {
+        <div class="flex flex-wrap gap-2 pt-2">
+          @for (s of services; track s) {
+            <button
+              (click)="selectService(s)"
+              class="px-3 py-1.5 rounded-full bg-white/50 border border-white text-slate-600 text-[9px] font-black hover:bg-slate-900 hover:text-white transition-all uppercase tracking-tighter"
+            >
+              + {{ s }}
+            </button>
+          }
+        </div>
+      }
+      <div id="anchor"></div>
+    </div>
+
+    <div class="p-4 bg-white/30 border-t border-white/50">
+      <input
+        [(ngModel)]="userInput"
+        (keyup.enter)="handleInput()"
+        type="text"
+        placeholder="Type command or reply..."
+        class="w-full bg-white/80 border border-white px-4 py-3 rounded-2xl text-[11px] font-bold outline-none focus:ring-4 focus:ring-slate-900/5 transition-all shadow-inner"
+      />
+    </div>
   </div>
-</div>
 }

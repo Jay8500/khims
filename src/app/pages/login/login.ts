@@ -16,7 +16,7 @@ export class Login {
   email = '';
   password = '';
   loading = false;
-
+showPassword = signal(false); // పాస్‌వర్డ్ విజిబిలిటీ కోసం
   private supabase = inject(Supabase);
   public branding = inject(Branding);
   private router = inject(Router);
@@ -81,5 +81,9 @@ export class Login {
     }
 
     this.loading = false;
+  }
+
+  togglePassword() {
+    this.showPassword.update(v => !v);
   }
 }
