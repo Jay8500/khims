@@ -12,8 +12,7 @@ import { Title } from '@angular/platform-browser';
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, Toasters, TheJay],
-  templateUrl: './app.html',
-  styleUrl: './app.css',
+  templateUrl: './app.html'
 })
 export class App {
   protected readonly title = signal('hms-web');

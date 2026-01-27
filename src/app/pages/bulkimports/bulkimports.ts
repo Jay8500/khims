@@ -6,8 +6,7 @@ import { Branding } from '../../services/branding';
   selector: 'app-bulkimports',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './bulkimports.html',
-  styleUrl: './bulkimports.css',
+  templateUrl: './bulkimports.html'
 })
 export class Bulkimports {
   branding = inject(Branding);

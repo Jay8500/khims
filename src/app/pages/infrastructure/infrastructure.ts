@@ -20,8 +20,7 @@ interface Room {
   selector: 'app-infrastructure',
   standalone: true, // Added standalone true for modern Angular
   imports: [CommonModule, FormsModule],
-  templateUrl: './infrastructure.html',
-  styleUrl: './infrastructure.css',
+  templateUrl: './infrastructure.html'
 })
 export class Infrastructure {
   // --- UI STATE SIGNALS ---

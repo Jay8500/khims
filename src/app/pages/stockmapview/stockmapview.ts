@@ -6,8 +6,7 @@ import { Branding } from '../../services/branding';
   selector: 'app-stockmapview',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './stockmapview.html',
-  styleUrl: './stockmapview.css',
+  templateUrl: './stockmapview.html'
 })
 export class Stockmapview {
   branding = inject(Branding);

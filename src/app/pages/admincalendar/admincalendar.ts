@@ -6,8 +6,7 @@ import { Branding } from '../../services/branding';
   selector: 'app-admincalendar',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './admincalendar.html',
-  styleUrl: './admincalendar.css',
+  templateUrl: './admincalendar.html'
 })
 export class Admincalendar {
   branding = inject(Branding);

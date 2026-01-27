@@ -6,8 +6,7 @@ import { Branding } from '../../services/branding';
   selector: 'app-configurations',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './configurations.html',
-  styleUrl: './configurations.css',
+  templateUrl: './configurations.html'
 })
 export class Configurations {
   public branding = inject(Branding);

@@ -3,8 +3,7 @@ import { Component } from '@angular/core';
 @Component({
   selector: 'app-loader',
   imports: [],
-  templateUrl: './loader.html',
-  styleUrl: './loader.css',
+  templateUrl: './loader.html'
 })
 export class Loader {
 

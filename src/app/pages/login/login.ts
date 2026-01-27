@@ -10,13 +10,12 @@ import { Toaster } from '../../services/toaster';
   imports: [FormsModule, Validator],
   standalone: true,
   templateUrl: './login.html',
-  styleUrl: './login.css',
 })
 export class Login {
   email = '';
   password = '';
   loading = false;
-showPassword = signal(false); // పాస్‌వర్డ్ విజిబిలిటీ కోసం
+  showPassword = signal(false); // పాస్‌వర్డ్ విజిబిలిటీ కోసం
   private supabase = inject(Supabase);
   public branding = inject(Branding);
   private router = inject(Router);
@@ -25,8 +24,6 @@ showPassword = signal(false); // పాస్‌వర్డ్ విజిబ�
   constructor(private toaster: Toaster) {
     this.tenantInfo.set(this.supabase.getTenantInfo());
   }
-
-
 
   async handleLogin(form: NgForm) {
     this.isSubmitted.set(true);
@@ -84,6 +81,6 @@ showPassword = signal(false); // పాస్‌వర్డ్ విజిబ�
   }
 
   togglePassword() {
-    this.showPassword.update(v => !v);
+    this.showPassword.update((v) => !v);
   }
 }

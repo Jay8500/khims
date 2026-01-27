@@ -17,8 +17,7 @@ import { Theme } from '../../services/theme';
   selector: 'app-header',
   standalone: true, // Ensuring standalone is clear
   imports: [CommonModule],
-  templateUrl: './header.html',
-  styleUrl: './header.css',
+  templateUrl: './header.html'
 })
 export class Header implements OnInit {
   private eRef = inject(ElementRef);

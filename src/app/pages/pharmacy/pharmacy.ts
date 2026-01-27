@@ -5,8 +5,7 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-pharmacy',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './pharmacy.html',
-  styleUrl: './pharmacy.css',
+  templateUrl: './pharmacy.html'
 })
 export class Pharmacy {
   // In a real app, this would come from a Shared Service

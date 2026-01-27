@@ -16,8 +16,7 @@ interface StockItem {
   selector: 'app-inventory',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './inventory.html',
-  styleUrl: './inventory.css',
+  templateUrl: './inventory.html'
 })
 export class Inventory implements OnInit {
   private supabase = inject(Supabase);

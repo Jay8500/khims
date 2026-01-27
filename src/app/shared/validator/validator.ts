@@ -5,8 +5,7 @@ import { NgModel } from '@angular/forms';
   selector: 'app-validator',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './validator.html',
-  styleUrl: './validator.css',
+  templateUrl: './validator.html'
 })
 export class Validator {
   // Pass the #name="ngModel" from your input

@@ -9,8 +9,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser'; // Add this
 @Component({
   selector: 'app-sidebar',
   imports: [CommonModule, RouterLink, RouterLinkActive],
-  templateUrl: './sidebar.html',
-  styleUrl: './sidebar.css',
+  templateUrl: './sidebar.html'
 })
 export class Sidebar implements OnInit {
   @Input() isExpanded = true;

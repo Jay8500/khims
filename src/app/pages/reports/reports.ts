@@ -5,8 +5,7 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-reports',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './reports.html',
-  styleUrl: './reports.css',
+  templateUrl: './reports.html'
 })
 export class Reports {
   // Enhanced Mock Data

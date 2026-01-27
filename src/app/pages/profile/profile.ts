@@ -4,8 +4,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-profile',
   imports: [CommonModule],
-  templateUrl: './profile.html',
-  styleUrl: './profile.css',
+  templateUrl: './profile.html'
 })
 export class Profile implements OnInit {
   private supabase = inject(Supabase);

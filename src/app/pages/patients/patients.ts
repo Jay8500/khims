@@ -24,8 +24,7 @@ interface Patient {
   selector: 'app-patients',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './patients.html',
-  styleUrl: './patients.css',
+  templateUrl: './patients.html'
 })
 export class Patients implements OnInit {
   public supabase = inject(Supabase);

@@ -4,8 +4,7 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-stats',
   imports: [CommonModule, FormsModule],
-  templateUrl: './stats.html',
-  styleUrl: './stats.css',
+  templateUrl: './stats.html'
 })
 export class Stats {
   // Mocking the data source (In your app, these come from your Service)

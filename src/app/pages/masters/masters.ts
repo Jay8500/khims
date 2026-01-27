@@ -3,8 +3,7 @@ import { Supabase } from '../../services/supabase';
 @Component({
   selector: 'app-masters',
   imports: [],
-  templateUrl: './masters.html',
-  styleUrl: './masters.css',
+  templateUrl: './masters.html'
 })
 export class Masters {
 supabase = inject(Supabase);
